@@ -21,4 +21,18 @@ typedef struct Processor{
     uint16_t stack[16]; /*!< a 16 16-bit values array to store the addresses that the interpreter should return to when a subroutine terminates */
 } Processor;
 
+
+/**
+ * Initializes the processor structure
+ * @return A pointer to the initialized Processor structure, NULL if it has failed
+ */
+Processor* initializeProcessor();
+
+/**
+ *
+ * @param cpu A pointer to the processor to free
+ * @return 0 if success and 1 if failure
+ */
+int freeProcessor(Processor* cpu);
+
 #endif //CHIP8_PROCESSOR_H
