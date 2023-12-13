@@ -107,7 +107,7 @@ void LD_Vx_Vy(Processor* cpu, uint8_t x, uint8_t y);
 
 /**
  * Performs a bitwise OR on the values of Vx and Vy, then stores the result in Vx. A bitwise OR compares the corresponding
-    bits from two values, and if either bit is 1, then the same bit in the result is also 1. Otherwise, it is 0.
+ * bits from two values, and if either bit is 1, then the same bit in the result is also 1. Otherwise, it is 0.
  * @param cpu
  * @param x
  * @param y
@@ -116,7 +116,7 @@ void OR_Vx_Vy(Processor* cpu, uint8_t x, uint8_t y);
 
 /**
  * Performs a bitwise AND on the values of Vx and Vy, then stores the result in Vx. A bitwise AND compares the corresponding
- bits from two values, and if both bits are 1, then the same bit in the result is also 1. Otherwise, it is 0.
+ * bits from two values, and if both bits are 1, then the same bit in the result is also 1. Otherwise, it is 0.
  * @param cpu
  * @param x
  * @param y
@@ -125,7 +125,7 @@ void AND_Vx_Vy(Processor* cpu, uint8_t x, uint8_t y);
 
 /**
  * Performs a bitwise exclusive OR on the values of Vx and Vy, then stores the result in Vx. An exclusive OR compares the corresponding
- bits from two values, and if the bits are not both the same, then the corresponding bit in the result is set to 1. Otherwise, it is 0.
+ * bits from two values, and if the bits are not both the same, then the corresponding bit in the result is set to 1. Otherwise, it is 0.
  * @param cpu
  * @param x
  * @param y
@@ -134,7 +134,7 @@ void XOR_Vx_Vy(Processor* cpu, uint8_t x, uint8_t y);
 
 /**
  * The values of Vx and Vy are added together. If the result is greater than 8 bits (i.e., > 255,) VF is set to 1, otherwise 0.
- Only the lowest 8 bits of the result are kept, and stored in Vx.
+ * Only the lowest 8 bits of the result are kept, and stored in Vx.
  * @param cpu
  * @param x
  * @param y
@@ -192,5 +192,80 @@ void JP_V0(Processor* cpu, uint16_t value);
  * @param kkk
  */
 void RND_Vx(Processor* cpu, uint8_t x, uint8_t kkk);
+
+/**
+ * The interpreter reads n bytes from memory, starting at the address stored in I. These bytes are then displayed as sprites on screen at coordinates (Vx, Vy).
+ * Sprites are XORed onto the existing screen. If this causes any pixels to be erased, VF is set to 1, otherwise it is set to 0.
+ * If the sprite is positioned so part of it is outside the coordinates of the display, it wraps around to the opposite side of the screen.
+ * @param cpu
+ * @param x
+ * @param y
+ * @param n
+ */
+void DRW_Vx_Vy(Processor* cpu, uint8_t x, uint8_t y, uint8_t n);
+
+/**
+ * Checks the keyboard, and if the key corresponding to the value of Vx is currently in the down position, PC is increased by 2.
+ * @param cpu
+ * @param x
+ */
+void SKP_Vx(Processor* cpu,uint8_t x);
+
+/**
+ * Checks the keyboard, and if the key corresponding to the value of Vx is currently in the up position, PC is increased by 2.
+ * @param cpu
+ * @param x
+ */
+void SNKP_Vx(Processor* cpu,uint8_t x);
+
+/**
+ * The value of DT is placed into Vx.
+ * @param cpu
+ * @param x
+ */
+void LD_Vx_DT(Processor* cpu,uint8_t x);
+
+/**
+ * All execution stops until a key is pressed, then the value of that key is stored in Vx.
+ * @param cpu
+ * @param x
+ */
+void LD_DT_K(Processor* cpu, uint8_t x);
+
+/**
+ * DT is set equal to the value of Vx.
+ * @param cpu
+ * @param x
+ */
+void LD_DT_Vx(Processor* cpu, uint8_t x);
+
+/**
+ * ST is set equal to the value of Vx.
+ * @param cpu
+ * @param x
+ */
+void LD_ST_Vx(Processor* cpu, uint8_t x);
+
+/**
+ * The values of I and Vx are added, and the results are stored in I.
+ * @param cpu
+ * @param x
+ */
+void ADD_I_Vx(Processor* cpu, uint8_t x);
+
+/**
+ * The value of I is set to the location for the hexadecimal sprite corresponding to the value of Vx.
+ * @param cpu
+ * @param x
+ */
+void LD_F_Vx(Processor* cpu, uint8_t x);
+
+/**
+ * The interpreter copies the values of registers V0 through Vx into memory, starting at the address in I.
+ * @param cpu
+ * @param x
+ * @param ram
+ */
+void LD_I_Vx(Processor* cpu,uint8_t x,RAM* ram);
 
 #endif //CHIP8_CPU_H
