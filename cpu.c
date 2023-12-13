@@ -109,3 +109,55 @@ void SUB_Vx_Vy(Processor* cpu, uint8_t x, uint8_t y){
     }
     cpu->V[x] -= cpu->V[y];
 }
+
+void SHR_Vx(Processor *cpu, uint8_t x){
+    assert(cpu);
+    if (cpu->V[x] & 0x01){ // 0x01 = 00000001
+        cpu->V[0xF] = 1;
+    }else{
+        cpu->V[0xF] = 0;
+    }
+    cpu->V[x] = cpu->V[x] / 2;
+}
+
+void SUBN_Vx_Vy(Processor* cpu, uint8_t x, uint8_t y){
+    assert(cpu);
+    if(cpu->V[y] > cpu->V[x]){
+        cpu->V[0xF] = 1;
+    }else{
+        cpu->V[0xF] = 0;
+    }
+    cpu->V[x] -= cpu->V[y];
+}
+
+void SHL_Vx(Processor* cpu, uint8_t x){
+    assert(cpu);
+    if(cpu->V[x] & 0x80){ // 0x80 = 10000000
+        cpu->V[0xF] = 1;
+    }else{
+        cpu->V[0xF] = 0;
+    }
+}
+
+void SNE_Vx_Vy(Processor* cpu, uint8_t x,uint8_t y){
+    assert(cpu);
+    if(cpu->V[x] != cpu->V[y]){
+        cpu->PC += 2;
+    }
+}
+
+void LD_I(Processor* cpu, uint16_t value){
+    assert(cpu);
+    cpu->I = value;
+}
+
+void JP_V0(Processor* cpu, uint16_t value){
+    assert(cpu);
+    cpu->PC = cpu->V[0] + value;
+}
+
+void RND_Vx(Processor* cpu, uint8_t x, uint8_t kkk){
+    assert(cpu);
+    uint8_t randInt = rand() % 256;
+    cpu->V[x] = randInt & kkk;
+}

@@ -11,7 +11,7 @@
 
 /**
  * \struct Processor
- * \brief CHIP 8 emulated processor and registre
+ * \brief
  */
 typedef struct Processor{
     uint8_t V[16]; /*!< 16 general purpose 8-bit registers, referred to as V0, V1, ..., VF */
@@ -148,5 +148,49 @@ void ADD_Vx_Vy(Processor* cpu, uint8_t x, uint8_t y);
  * @param y
  */
 void SUB_Vx_Vy(Processor* cpu, uint8_t x, uint8_t y);
+
+/**
+ * If Vy > Vx, then VF is set to 1, otherwise 0. Then Vx is subtracted from Vy, and the results stored in Vx.
+ * @param cpu
+ * @param x
+ */
+void SHR_Vx(Processor *cpu, uint8_t x);
+
+/**
+ * If the most-significant bit of Vx is 1, then VF is set to 1, otherwise to 0. Then Vx is multiplied by 2.
+ * @param cpu
+ * @param x
+ */
+void SHL_Vx(Processor* cpu, uint8_t x);
+
+/**
+ * The values of Vx and Vy are compared, and if they are not equal, the program counter is increased by 2.
+ * @param cpu
+ * @param x
+ * @param y
+ */
+void SNE_Vx_Vy(Processor* cpu, uint8_t x,uint8_t y);
+
+/**
+ * The value of register I is set to nnn.
+ * @param cpu
+ * @param value
+ */
+void LD_I(Processor* cpu, uint16_t value);
+
+/**
+ * The program counter is set to nnn plus the value of V0.
+ * @param cpu
+ * @param value
+ */
+void JP_V0(Processor* cpu, uint16_t value);
+
+/**
+ * The interpreter generates a random number from 0 to 255, which is then ANDed with the value kk. The results are stored in Vx.
+ * @param cpu
+ * @param x
+ * @param kkk
+ */
+void RND_Vx(Processor* cpu, uint8_t x, uint8_t kkk);
 
 #endif //CHIP8_CPU_H
