@@ -1,16 +1,16 @@
-#ifndef CHIP8_PROCESSOR_H
-#define CHIP8_PROCESSOR_H
+#ifndef CHIP8_CPU_H
+#define CHIP8_CPU_H
 
-#include "memory.h"
+#include "ram.h"
 
 /**
- * \file processor.h
+ * \file cpu.h
  * \brief Contains the processor data structure and all related functions declarations
  */
 
 /**
  * \struct Processor
- * \brief CHIP 8 emulated processor with all related register
+ * \brief CHIP 8 emulated processor and registre
  */
 typedef struct Processor{
     uint8_t V[16]; /*!< 16 general purpose 8-bit registers, referred to as V0, V1, ..., VF */
@@ -24,15 +24,15 @@ typedef struct Processor{
 
 /**
  * Initializes the processor structure
- * @return A pointer to the initialized Processor structure, NULL if it has failed
+ * @return A pointer to the initialized Processor structure, NULL if failed
  */
-Processor* initializeProcessor();
+Processor* newProcessor();
 
 /**
  *
  * @param cpu A pointer to the processor to free
  * @return 0 if success and 1 if failure
  */
-int freeProcessor(Processor* cpu);
+int deleteProcessor(Processor* cpu);
 
-#endif //CHIP8_PROCESSOR_H
+#endif //CHIP8_CPU_H

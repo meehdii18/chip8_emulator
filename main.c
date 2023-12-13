@@ -1,14 +1,16 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "memory.h"
+#include "ram.h"
+#include "cpu.h"
 
 int main() {
 
-    RAM* chip8_ram = initializeRAM();
+    RAM* chip8_ram = newRAM();
+    Processor* chip8_cpu = newProcessor();
 
-    /**********************************************************
+    /*
      Testing write and read ram function
-     ***********************************************************/
+    */
 
     // NORMAL CASE
     uint16_t address = 0xFFF;
@@ -24,10 +26,11 @@ int main() {
     // ERROR CASE
     uint8_t test = readRAM(chip8_ram, 9000);
 
-    /**********************************************************
+    /*
      Testing processor base function
-     ***********************************************************/
+    */
 
-    freeRAM(chip8_ram);
+    deleteRAM(chip8_ram);
+    deleteProcessor(chip8_cpu);
     return 0;
 }

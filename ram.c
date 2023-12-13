@@ -1,6 +1,6 @@
-#include "memory.h"
+#include "ram.h"
 
-RAM* initializeRAM(){
+RAM* newRAM(){
     RAM* ram = malloc(sizeof(RAM));
     if (ram == NULL){
         fprintf(stderr, "Error : RAM structure allocation failed.\n");
@@ -16,16 +16,16 @@ RAM* initializeRAM(){
     return ram;
 }
 
-int freeRAM(RAM* ram){
+int deleteRAM(RAM* ram){
     free(ram->ram);
-    ram->ram = NULL;
+    free(ram);
     return 0;
 }
 
 uint8_t readRAM(RAM* ram,uint16_t address){
     if (address >= 4096){
         fprintf(stderr, "Error : Address out of range.\n");
-        return 1;
+        exit(EXIT_FAILURE);
     }
     return ram->ram[address];
 }

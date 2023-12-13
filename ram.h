@@ -1,11 +1,11 @@
-#ifndef CHIP8_MEMORY_H
-#define CHIP8_MEMORY_H
+#ifndef CHIP8_RAM_H
+#define CHIP8_RAM_H
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
 
 /**
- * \file memory.h
+ * \file ram.h
  * \brief Contains the ram memory data structure and all related functions declarations
  */
 
@@ -21,14 +21,14 @@ typedef struct RAM {
  * Initialize the ram memory structure
  * @return A pointer to the ram structure if success, NULL if it failed
  */
-RAM* initializeRAM();
+RAM* newRAM();
 
 /**
  * Frees the memory allocated for the RAM structure.
  * @param ram A pointer to the ram structure to free
  * @return 0 if the ram was successfully freed
  */
-int freeRAM(RAM* ram);
+int deleteRAM(RAM* ram);
 
 /**
  * Function to read the value at a given address in a ram
@@ -48,4 +48,4 @@ uint8_t readRAM(RAM* ram,uint16_t address);
 int writeRAM(RAM* ram, uint16_t address, uint8_t value);
 
 
-#endif //CHIP8_MEMORY_H
+#endif //CHIP8_RAM_H
