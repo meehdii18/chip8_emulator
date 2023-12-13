@@ -7,9 +7,9 @@ RAM* newRAM(){
         return NULL;
     }
 
-    ram->ram = malloc(sizeof(uint8_t) * 4096);
-    if (ram->ram == NULL){
-        fprintf(stderr, "Error: ram initialization failed.\n");
+    ram->cell = malloc(sizeof(uint8_t) * 4096);
+    if (ram->cell == NULL){
+        fprintf(stderr, "Error: RAM array allocation failed.\n");
         free(ram);
         return NULL;
     }
@@ -17,24 +17,32 @@ RAM* newRAM(){
 }
 
 int deleteRAM(RAM* ram){
-    free(ram->ram);
+    free(ram->cell);
     free(ram);
     return 0;
 }
 
-uint8_t readRAM(RAM* ram,uint16_t address){
-    if (address >= 4096){
+uint8_t readRAM(RAM* ram,uint16_t adr){
+    if(ram == NULL){
+        fprintf(stderr,"Error : Can't read in a NULL ram.\n");
+        exit(EXIT_FAILURE);
+    }
+    if (adr >= 4096){
         fprintf(stderr, "Error : Address out of range.\n");
         exit(EXIT_FAILURE);
     }
-    return ram->ram[address];
+    return ram->cell[adr];
 }
 
-int writeRAM(RAM* ram, uint16_t address, uint8_t value){
-    if (address >= 4096){
-        fprintf(stderr,"Error : Address out of range.\n");
-        return 1;
+void writeRAM(RAM* ram, uint16_t adr, uint8_t value){
+    if(ram == NULL){
+        fprintf(stderr,"Error : Can't write to a NULL ram.\n");
+        exit(EXIT_FAILURE);
     }
-    ram->ram[address] = value;
-    return 0;
+    if (adr >= 4096){
+        fprintf(stderr,"Error : Address out of range.\n");
+        exit(EXIT_FAILURE);
+    }else{
+        ram->cell[adr] = value;
+    }
 }

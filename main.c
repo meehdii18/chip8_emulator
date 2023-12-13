@@ -9,7 +9,7 @@ int main() {
     Processor* chip8_cpu = newProcessor();
 
     /*
-     Testing write and read ram function
+     Testing write and read cell function
     */
 
     // NORMAL CASE
@@ -18,9 +18,9 @@ int main() {
     writeRAM(chip8_ram, address, value);
     uint8_t result = readRAM(chip8_ram, address);
     if(result == value ){
-        printf("Initial value to write : [%u] | Address in the ram : [%u] | Value at that address in the ram : [%u].\n", value, address, result);
+        printf("Initial value to write : [%u]\nAddress in the cell : [%u]\nValue at that address in the cell : [%u]\n", value, address, result);
     }else{
-        printf("Initial value to write : [%u] | Address in the ram : [%u] | Value at that address in the ram : [%u].\nERROR : Wrong value at the address.\n", value, address, result);
+        printf("Initial value to write : [%u]\nAddress in the cell : [%u]\nValue at that address in the cell : [%u].\nERROR : Wrong value at the address\n", value, address, result);
     }
 
     // ERROR CASE
