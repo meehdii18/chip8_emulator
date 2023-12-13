@@ -95,6 +95,6 @@ void LD_Vx(Processor* cpu, uint8_t x, uint8_t value);
  * @param x
  * @param value
  */
-void ADD_Vx(Processor* cpu, uint8_t x,uint8_t value);
+void ADD_Vx(Processor* cpu, uint8_t x, uint8_t value);
 
 #endif //CHIP8_CPU_H

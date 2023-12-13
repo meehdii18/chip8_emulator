@@ -34,7 +34,7 @@ uint8_t readRAM(RAM* ram,uint16_t adr){
     return ram->cell[adr];
 }
 
-void writeRAM(RAM* ram, uint16_t adr, uint8_t value){
+void writeRAM(RAM* ram, uint16_t adr,uint8_t value){
     if(ram == NULL){
         fprintf(stderr,"Error : Can't write to a NULL ram.\n");
         exit(EXIT_FAILURE);

@@ -65,8 +65,7 @@ void LD_Vx(Processor* cpu, uint8_t x, uint8_t value){
     cpu->V[x] = value;
 }
 
-void ADD_Vx(Processor* cpu, uint8_t x, uint8_t value){
+void ADD_Vx(Processor* cpu, uint8_t x,uint8_t value){
     assert(cpu);
     cpu->V[x] += value;
 }
-

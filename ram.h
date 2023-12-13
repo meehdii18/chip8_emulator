@@ -45,7 +45,7 @@ uint8_t readRAM(RAM* ram,uint16_t adr);
  * @param value The value to store in the address
  * @return 0 if the value was successfully written into the cell, 1 if it is out of range
  */
-void writeRAM(RAM* ram, uint16_t adr, uint8_t value);
+void writeRAM(RAM* ram, uint16_t adr,uint8_t value);
 
 
 #endif //CHIP8_RAM_H

@@ -15,7 +15,7 @@ int main() {
     // NORMAL CASE
     uint16_t address = 0xFFF;
     uint8_t value = 0xFA;
-    writeRAM(chip8_ram, address, value);
+    writeRAM(chip8_ram, address,value);
     uint8_t result = readRAM(chip8_ram, address);
     if(result == value ){
         printf("Initial value to write : [%u]\nAddress in the cell : [%u]\nValue at that address in the cell : [%u]\n", value, address, result);
