@@ -87,7 +87,7 @@ void SE_Vx_Vy(Processor* cpu, uint8_t x, uint8_t y);
  * @param x
  * @param value
  */
-void LD_Vx(Processor* cpu, uint8_t x, uint8_t value);
+void LD_Vx_Byte(Processor* cpu, uint8_t x, uint8_t value);
 
 /**
  * Adds the value kk to the value of register Vx, then stores the result in Vx.
@@ -95,6 +95,58 @@ void LD_Vx(Processor* cpu, uint8_t x, uint8_t value);
  * @param x
  * @param value
  */
-void ADD_Vx(Processor* cpu, uint8_t x, uint8_t value);
+void ADD_Vx_Byte(Processor* cpu, uint8_t x, uint8_t value);
+
+/**
+ * Stores the value of register Vy in register Vx.
+ * @param cpu
+ * @param x
+ * @param y
+ */
+void LD_Vx_Vy(Processor* cpu, uint8_t x, uint8_t y);
+
+/**
+ * Performs a bitwise OR on the values of Vx and Vy, then stores the result in Vx. A bitwise OR compares the corresponding
+    bits from two values, and if either bit is 1, then the same bit in the result is also 1. Otherwise, it is 0.
+ * @param cpu
+ * @param x
+ * @param y
+ */
+void OR_Vx_Vy(Processor* cpu, uint8_t x, uint8_t y);
+
+/**
+ * Performs a bitwise AND on the values of Vx and Vy, then stores the result in Vx. A bitwise AND compares the corresponding
+ bits from two values, and if both bits are 1, then the same bit in the result is also 1. Otherwise, it is 0.
+ * @param cpu
+ * @param x
+ * @param y
+ */
+void AND_Vx_Vy(Processor* cpu, uint8_t x, uint8_t y);
+
+/**
+ * Performs a bitwise exclusive OR on the values of Vx and Vy, then stores the result in Vx. An exclusive OR compares the corresponding
+ bits from two values, and if the bits are not both the same, then the corresponding bit in the result is set to 1. Otherwise, it is 0.
+ * @param cpu
+ * @param x
+ * @param y
+ */
+void XOR_Vx_Vy(Processor* cpu, uint8_t x, uint8_t y);
+
+/**
+ * The values of Vx and Vy are added together. If the result is greater than 8 bits (i.e., > 255,) VF is set to 1, otherwise 0.
+ Only the lowest 8 bits of the result are kept, and stored in Vx.
+ * @param cpu
+ * @param x
+ * @param y
+ */
+void ADD_Vx_Vy(Processor* cpu, uint8_t x, uint8_t y);
+
+/**
+ * If Vx > Vy, then VF is set to 1, otherwise 0. Then Vy is subtracted from Vx, and the results stored in Vx.
+ * @param cpu
+ * @param x
+ * @param y
+ */
+void SUB_Vx_Vy(Processor* cpu, uint8_t x, uint8_t y);
 
 #endif //CHIP8_CPU_H

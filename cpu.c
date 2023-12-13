@@ -60,12 +60,52 @@ void SE_Vx_Vy(Processor* cpu, uint8_t x, uint8_t y){
     }
 }
 
-void LD_Vx(Processor* cpu, uint8_t x, uint8_t value){
+void LD_Vx_Byte(Processor* cpu, uint8_t x, uint8_t value){
     assert(cpu);
     cpu->V[x] = value;
 }
 
-void ADD_Vx(Processor* cpu, uint8_t x,uint8_t value){
+void ADD_Vx_Byte(Processor* cpu, uint8_t x,uint8_t value){
     assert(cpu);
     cpu->V[x] += value;
+}
+
+void LD_Vx_Vy(Processor* cpu, uint8_t x, uint8_t y){
+    assert(cpu);
+    cpu->V[x] = cpu->V[y];
+}
+
+void OR_Vx_Vy(Processor* cpu, uint8_t x, uint8_t y){
+    assert(cpu);
+    cpu->V[x] = cpu->V[x] || cpu->V[y];
+}
+
+void AND_Vx_Vy(Processor* cpu, uint8_t x, uint8_t y){
+    assert(cpu);
+    cpu->V[x] = cpu->V[x] && cpu->V[y];
+}
+
+void XOR_Vx_Vy(Processor* cpu, uint8_t x, uint8_t y){
+    assert(cpu);
+    cpu->V[x] = cpu->V[x] ^ cpu->V[y];
+}
+
+void ADD_Vx_Vy(Processor* cpu, uint8_t x, uint8_t y){
+    uint8_t temp = cpu->V[x] + cpu->V[y];
+    if(temp > 255){
+        cpu->V[0xF] = 1;
+    }else{
+        cpu->V[0xF] = 0;
+    }
+    cpu->V[x] = temp & 0xFF; // binary mask
+}
+
+void SUB_Vx_Vy(Processor* cpu, uint8_t x, uint8_t y){
+    assert(cpu);
+    if(cpu->V[x] > cpu->V[y]){
+        cpu->V[0xF] = 1;
+    }else{
+        cpu->V[0xF] = 0;
+    }
+    cpu->V[x] -= cpu->V[y];
 }

@@ -23,6 +23,7 @@ int main() {
         printf("Initial value to write : [%u]\nAddress in the cell : [%u]\nValue at that address in the cell : [%u].\nERROR : Wrong value at the address\n", value, address, result);
     }
 
+
     // ERROR CASE
     uint8_t test = readRAM(chip8_ram, 9000);
 
