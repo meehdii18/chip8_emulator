@@ -260,4 +260,6 @@ void fetch_decode_execute(Processor *cpu) {
         LD_Vx_Byte(cpu,(instruction & 0x0F00), (instruction & 0x00FF));
     else if(code_operation == 0x7000) // 7xkk
         ADD_Vx_Byte(cpu,(instruction & 0x0F00),(instruction & 0x00FF));
+    else if (code_operation == 0x8000) // 8xy0
+        LD_Vx_Vy(cpu,(instruction & 0x0F00),(instruction & 0x00F0));
 }
