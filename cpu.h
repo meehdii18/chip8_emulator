@@ -21,6 +21,8 @@ typedef struct Processor{
     uint16_t PC; /*!< a 16-bit register, called program counter or PC, used to store the address of the instruction currently being executed */
     uint8_t SP; /*!< Pointer to the topmost level of the stack */
     uint16_t stack[16]; /*!< a 16 16-bit values array to store the addresses that the interpreter should return to when a subroutine terminates */
+    struct RAM* ram; /*!< Pointer to the RAM memory linked to the cpu */
+    // Attached I/O devices
 } Processor;
 
 
@@ -150,11 +152,19 @@ void ADD_Vx_Vy(Processor* cpu, uint8_t x, uint8_t y);
 void SUB_Vx_Vy(Processor* cpu, uint8_t x, uint8_t y);
 
 /**
- * If Vy > Vx, then VF is set to 1, otherwise 0. Then Vx is subtracted from Vy, and the results stored in Vx.
+ * If the least-significant bit of Vx is 1, then VF is set to 1, otherwise 0. Then Vx is divided by 2.
  * @param cpu
  * @param x
  */
 void SHR_Vx(Processor *cpu, uint8_t x);
+
+/**
+ * If Vy > Vx, then VF is set to 1, otherwise 0. Then Vx is subtracted from Vy, and the results stored in Vx.
+ * @param cpu
+ * @param x
+ * @param y
+ */
+void SUBN_Vx_Vy(Processor* cpu, uint8_t x, uint8_t y);
 
 /**
  * If the most-significant bit of Vx is 1, then VF is set to 1, otherwise to 0. Then Vx is multiplied by 2.
@@ -230,7 +240,7 @@ void LD_Vx_DT(Processor* cpu,uint8_t x);
  * @param cpu
  * @param x
  */
-void LD_DT_K(Processor* cpu, uint8_t x);
+void LD_Vx_K(Processor* cpu, uint8_t x);
 
 /**
  * DT is set equal to the value of Vx.
@@ -261,11 +271,26 @@ void ADD_I_Vx(Processor* cpu, uint8_t x);
 void LD_F_Vx(Processor* cpu, uint8_t x);
 
 /**
+ * The interpreter takes the decimal value of Vx, and places the hundreds digit in memory at location in I, the tens digit at location I+1, and the ones digit at location I+2.
+ * @param cpu
+ * @param x
+ */
+void LD_B_Vx(Processor* cpu, uint8_t x);
+
+/**
  * The interpreter copies the values of registers V0 through Vx into memory, starting at the address in I.
  * @param cpu
  * @param x
- * @param ram
  */
-void LD_I_Vx(Processor* cpu,uint8_t x,RAM* ram);
+void LD_I_Vx(Processor* cpu,uint8_t x);
+
+/**
+ * The interpreter reads values from memory starting at location I into registers V0 through Vx.
+ * @param cpu
+ * @param x
+ */
+void LD_Vx_I(Processor* cpu, uint8_t x);
+
+void fetch_decode_execute(Processor* cpu);
 
 #endif //CHIP8_CPU_H
