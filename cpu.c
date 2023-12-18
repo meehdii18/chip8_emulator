@@ -246,15 +246,18 @@ void fetch_decode_execute(Processor *cpu) {
         } else if ((instruction & 0x000F) == 0x000E) { // 00EE
             RET(cpu);
         }
-    } else if (code_operation == 0x1000) { // 1nnn
+    } else if (code_operation == 0x1000)  // 1nnn
         JP_addr(cpu, instruction & 0x0FFF);
-    } else if (code_operation == 0x2000) { // 2nnn
+    else if (code_operation == 0x2000)  // 2nnn
         CALL_addr(cpu, instruction & 0x0FFF);
-    } else if (code_operation == 0x3000) { // 3xkk
+    else if (code_operation == 0x3000)  // 3xkk
         SE_Vx(cpu, (instruction & 0x0F00) >> 8, instruction & 0x00FF);
-    } else if (code_operation == 0x4000) { // 4xkk
+    else if (code_operation == 0x4000)  // 4xkk
         SNE_Vx(cpu, (instruction & 0x0F00) >> 8, instruction & 0x00FF);
-    } else if (code_operation == 0x5000) { // 5xy0
+    else if (code_operation == 0x5000)  // 5xy0
         SE_Vx_Vy(cpu, (instruction & 0x0F00),(instruction & 0x00F0));
-    }
+    else if(code_operation == 0x6000) // 6xkk
+        LD_Vx_Byte(cpu,(instruction & 0x0F00), (instruction & 0x00FF));
+    else if(code_operation == 0x7000) // 7xkk
+        ADD_Vx_Byte(cpu,(instruction & 0x0F00),(instruction & 0x00FF));
 }
