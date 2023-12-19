@@ -11,7 +11,7 @@
 
 /**
  * \struct Processor
- * \brief
+ * \brief Processor of the emulated CHIP8
  */
 typedef struct Processor{
     uint8_t V[16]; /*!< 16 general purpose 8-bit registers, referred to as V0, V1, ..., VF */
@@ -30,7 +30,7 @@ typedef struct Processor{
  * Initializes the processor structure
  * @return A pointer to the initialized Processor structure, NULL if failed
  */
-Processor* newProcessor();
+Processor* newProcessor(RAM* ram);
 
 /**
  *
@@ -291,6 +291,10 @@ void LD_I_Vx(Processor* cpu,uint8_t x);
  */
 void LD_Vx_I(Processor* cpu, uint8_t x);
 
+/**
+ * Fetches, decodes, and executes the next instruction in the RAM.
+ * @param cpu
+ */
 void fetch_decode_execute(Processor* cpu);
 
 #endif //CHIP8_CPU_H

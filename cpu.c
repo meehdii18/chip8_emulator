@@ -1,12 +1,13 @@
 #include "cpu.h"
 
-Processor *newProcessor() {
+Processor *newProcessor(RAM* ram) {
     Processor *cpu = calloc(1, sizeof(Processor)); // calloc : everything to 0
     if (cpu == NULL) {
         fprintf(stderr, "Error : Processor allocation failed.\n");
         return NULL;
     }
     cpu->PC = 0x200; //0x200 : 0x000 to 0x1FF reserved for interpreter
+    cpu->ram = ram;
     return cpu;
 }
 
@@ -113,7 +114,7 @@ void SUB_Vx_Vy(Processor *cpu, uint8_t x, uint8_t y) { // 8xy5
 void SHR_Vx(Processor *cpu, uint8_t x) { // 8xy6
     assert(cpu);
     cpu->V[0xF] = cpu->V[x] & 0x01; // 0x01 = 00000001
-    cpu->V[x] >> 1;
+    cpu->V[x] = cpu->V[x] >> 1;
 }
 
 void SUBN_Vx_Vy(Processor *cpu, uint8_t x, uint8_t y) { // 8xy7
@@ -129,7 +130,7 @@ void SUBN_Vx_Vy(Processor *cpu, uint8_t x, uint8_t y) { // 8xy7
 void SHL_Vx(Processor *cpu, uint8_t x) { // 8xyE
     assert(cpu);
     cpu->V[0xF] = cpu->V[x] & 0x80; // 0x80 = 10000000
-    cpu->V[x] >> 1;
+    cpu->V[x] = cpu->V[x] >> 1;
 }
 
 void SNE_Vx_Vy(Processor *cpu, uint8_t x, uint8_t y) { // 9xy0
@@ -239,7 +240,7 @@ void fetch_decode_execute(Processor *cpu) {
     uint8_t instruction = code_operation & 0xF00F; // check first and two last 4 bits
     cpu->PC += 2;
 
-    //decode
+    //decode and execute
     if (code_operation == 0x0000) {
         if ((instruction & 0x000F) == 0x0000) { // 00E0
             // not done yet
@@ -262,4 +263,52 @@ void fetch_decode_execute(Processor *cpu) {
         ADD_Vx_Byte(cpu,(instruction & 0x0F00),(instruction & 0x00FF));
     else if (code_operation == 0x8000) // 8xy0
         LD_Vx_Vy(cpu,(instruction & 0x0F00),(instruction & 0x00F0));
+    else if (code_operation == 0x8001) // 8xy1
+        OR_Vx_Vy(cpu,(instruction & 0x0F00), (instruction & 0x00F0));
+    else if (code_operation == 0x8002) // 8xy2
+        AND_Vx_Vy(cpu,(instruction & 0x0F00),(instruction & 0x00F0));
+    else if(code_operation == 0x8003) // 8xy3
+        XOR_Vx_Vy(cpu,(instruction & 0x0F00), (instruction & 0x00F0));
+    else if(code_operation == 0x8004) // 8xy4
+        ADD_Vx_Vy(cpu,(instruction & 0x0F00),(instruction & 0x00F0));
+    else if(code_operation == 0x8005) // 8xy5
+        SUB_Vx_Vy(cpu,(instruction & 0x0F00),(instruction & 0x00F0));
+    else if(code_operation == 0x8006) // 8xy6
+        SHR_Vx(cpu,(instruction & 0x0F00));
+    else if(code_operation == 0x8007) // 8xy7
+        SUBN_Vx_Vy(cpu,(instruction & 0x0F00),(instruction & 0x00F0));
+    else if(code_operation == 0x800E) // 8xyE
+        SHL_Vx(cpu,(instruction & 0x0F00));
+    else if(code_operation == 0x9000) // 9xy0
+        SNE_Vx_Vy(cpu,(instruction & 0x0F00),(instruction & 0x00F0));
+    else if(code_operation == 0xA000) // Annn
+        LD_I(cpu,(instruction & 0x0FFF));
+    else if(code_operation == 0xB000) // Bnnn
+        JP_V0(cpu,(instruction & 0x0FFF));
+    else if(code_operation == 0xC000) // Cxkk
+        RND_Vx(cpu,(instruction & 0x0F00),(instruction & 0x00FF));
+    else if(code_operation == 0xD000) // Dxyn
+        DRW_Vx_Vy(cpu,(instruction & 0x0F00),(instruction & 0x00F0),(instruction & 0x000F));
+    else if(code_operation == 0xE09E) // Ex9E
+        SKP_Vx(cpu,(instruction & 0x0F00));
+    else if(code_operation == 0xE0A1) // ExA1
+        SNKP_Vx(cpu,(instruction & 0x0F00));
+    else if(code_operation == 0xF007) // Fx07
+        LD_Vx_DT(cpu,(instruction & 0x0F00));
+    else if(code_operation == 0xF00A) // Fx0A
+        LD_Vx_K(cpu,(instruction & 0x0F00));
+    else if(code_operation == 0xF015) // Fx15
+        LD_DT_Vx(cpu,(instruction & 0x0F00));
+    else if(code_operation == 0xF018) // Fx18
+        LD_ST_Vx(cpu,(instruction & 0x0F00));
+    else if(code_operation == 0xF01E) // Fx1E
+        ADD_I_Vx(cpu,(instruction & 0x0F00));
+    else if(code_operation == 0xF029) // Fx29
+        LD_F_Vx(cpu,(instruction & 0x0F00));
+    else if(code_operation == 0xF033) // Fx33
+        LD_B_Vx(cpu,(instruction & 0x0F00));
+    else if(code_operation == 0xF055) // Fx55
+        LD_I_Vx(cpu,(instruction & 0x0F00));
+    else if(code_operation == 0xF065) // Fx65
+        LD_Vx_I(cpu,(instruction & 0x0F00));
 }
