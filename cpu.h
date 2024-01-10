@@ -4,6 +4,7 @@
 #include "ram.h"
 #include <assert.h>
 
+
 /**
  * \file cpu.h
  * \brief Contains the processor data structure and all related functions declarations
