@@ -21,6 +21,11 @@ int deleteProcessor(Processor *cpu) {
     return 0;
 }
 
+void CLS(Display* display){ // 00E0
+    assert(display);
+    Display_CLS(display);
+}
+
 void RET(Processor *cpu) { // 00EE
     assert(cpu);
     cpu->PC = cpu->stack[cpu->SP];
@@ -152,23 +157,34 @@ void JP_V0(Processor *cpu, uint16_t value) { // Bnnn
 
 void RND_Vx(Processor *cpu, uint8_t x, uint8_t kkk) { // Cxkk
     assert(cpu);
-    uint8_t randInt = rand() % 256;
-    cpu->V[x] = randInt & kkk;
+    cpu->V[x] = (rand() % 256) & kkk;
 }
 
-void DRW_Vx_Vy(Processor *cpu, uint8_t x, uint8_t y, uint8_t n) { // Dxyn
+void DRW_Vx_Vy(Processor *cpu,struct Display* display, uint8_t x, uint8_t y, uint8_t n) { // Dxyn
     assert(cpu);
-    // pas possible pour l'instant
+    assert(display);
+    struct Sprite* sprite;
+    Sprite_init(sprite, n);
+    for (int i = 0; i < n;i++){
+        Sprite_add(sprite,i)
+    }
+    Display_DRW(display,sprite,x,y,cpu->V[0xF]);
 }
 
-void SKP_Vx(Processor *cpu, uint8_t x) { // Ex9E
+void SKP_Vx(Processor *cpu, struct Keyboard* keyboard,uint8_t x) { // Ex9E
     assert(cpu);
-    // pas possible pour l'instant
+    assert(keyboard);
+    if (Keyboard_get(x) == 1){
+        cpu->PC+=2;
+    }
 }
 
-void SNKP_Vx(Processor *cpu, uint8_t x) { // ExA1
+void SNKP_Vx(Processor *cpu, struct Keyboard* keyboard,uint8_t x) { // ExA1
     assert(cpu);
-    // pas possible pour l'instant
+    assert(keyboard);
+    if (Keyboard_get(keyboard,x) == 0){
+        cpu->PC+=2;
+    }
 }
 
 void LD_Vx_DT(Processor *cpu, uint8_t x) { // Fx07
@@ -176,9 +192,10 @@ void LD_Vx_DT(Processor *cpu, uint8_t x) { // Fx07
     cpu->V[x] = cpu->DT;
 }
 
-void LD_Vx_K(Processor *cpu, uint8_t x) { // Fx0A
+void LD_Vx_K(Processor *cpu, struct Keyboard* keyboard,uint8_t x) { // Fx0A
     assert(cpu);
-    // pas possible pour l'instant
+    assert(keyboard)
+    Keyboard_wait(keyboard,cpu->V[x]);
 }
 
 void LD_DT_Vx(Processor *cpu, uint8_t x) { // Fx15
@@ -198,7 +215,8 @@ void ADD_I_Vx(Processor *cpu, uint8_t x) { // Fx1E
 
 void LD_F_Vx(Processor *cpu, uint8_t x) { // Fx29
     assert(cpu);
-    // pas possible pour l'instant
+    assert(sprite);
+    //on doit coder en mémoire les sprites des nombres hexadécimaux et mettre I à l'adresse du sprite de la valeur de x
 }
 
 void LD_B_Vx(Processor *cpu, uint8_t x) { // Fx33

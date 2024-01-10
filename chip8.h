@@ -3,6 +3,7 @@
 
 #include "cpu.h"
 #include "ram.h"
+// #include "libprovided/lib/release/x64/libprovided.a"
 
 /**
  * \file chip8.h
@@ -14,11 +15,12 @@
  * \struct chip8
  * \brief Virtual machine representing the CHIP8
  */
-typedef struct chip8{
+typedef struct emulator{
     struct Processor* cpu; /*!< Processor of the machine */
-    //display /*!< Display of the machine */
-    //keyboard or controller /*!< Keyboard / Controller of the machine */
-    //speaker /*!< Speaker of the machine */
+    struct RAM* ram;
+    // struct Display display; /*!< Display of the machine */
+    // struct Keyboard keyboard; /*!< Keyboard / Controller of the machine */
+    // struct Speaker speaker; /*!< Speaker of the machine */
 }chip8;
 
 #endif //CHIP8_EMULATOR_CHIP8_H

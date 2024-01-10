@@ -45,5 +45,6 @@ int main() {
 
     deleteRAM(chip8_ram);
     deleteProcessor(chip8_cpu);
+
     return 0;
 }
