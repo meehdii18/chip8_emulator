@@ -42,6 +42,12 @@ Processor* newProcessor(RAM* ram);
 int deleteProcessor(Processor* cpu);
 
 /**
+ * Clear the display
+ * @param display
+ */
+void CLS(struct Display* display);
+
+/**
  * Sets the program counter to the address at the top of the stack, then subtracts 1 from the stack pointer.
  * @param cpu The processor that will execute the instruction
  */
@@ -214,21 +220,21 @@ void RND_Vx(Processor* cpu, uint8_t x, uint8_t kkk);
  * @param y
  * @param n
  */
-void DRW_Vx_Vy(Processor* cpu, uint8_t x, uint8_t y, uint8_t n);
+void DRW_Vx_Vy(Processor* cpu, struct Display* display, uint8_t x, uint8_t y, uint8_t n);
 
 /**
  * Checks the keyboard, and if the key corresponding to the value of Vx is currently in the down position, PC is increased by 2.
  * @param cpu
  * @param x
  */
-void SKP_Vx(Processor* cpu,uint8_t x);
+void SKP_Vx(Processor* cpu,struct Keyboard* keyboard,uint8_t x);
 
 /**
  * Checks the keyboard, and if the key corresponding to the value of Vx is currently in the up position, PC is increased by 2.
  * @param cpu
  * @param x
  */
-void SNKP_Vx(Processor* cpu,uint8_t x);
+void SNKP_Vx(Processor* cpu,struct Keyboard* keyboard,uint8_t x);
 
 /**
  * The value of DT is placed into Vx.
@@ -242,7 +248,7 @@ void LD_Vx_DT(Processor* cpu,uint8_t x);
  * @param cpu
  * @param x
  */
-void LD_Vx_K(Processor* cpu, uint8_t x);
+void LD_Vx_K(Processor* cpu, struct Keyboard* keyboard, uint8_t x);
 
 /**
  * DT is set equal to the value of Vx.
@@ -298,5 +304,11 @@ void LD_Vx_I(Processor* cpu, uint8_t x);
  * @param cpu
  */
 void fetch_decode_execute(Processor* cpu);
+
+/**
+ * Load default sprites into the ram.
+ * @param cpu
+ */
+void Load_sprite(Processor* cpu);
 
 #endif //CHIP8_CPU_H

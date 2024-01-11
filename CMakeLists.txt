@@ -14,7 +14,7 @@ add_executable(chip8_emulator
         main.c
         ram.c
         ram.h
-        chip8.h
-        chip8.c)
+        machine.h
+        machine.c)
 
 target_link_libraries(chip8_emulator PRIVATE SDL2::SDL2)

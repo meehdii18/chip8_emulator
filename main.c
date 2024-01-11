@@ -28,7 +28,7 @@ int main() {
     //uint8_t test = readRAM(chip8_ram, 9000);
 
     /*
-     Testing processor function
+     Testing some processor function
     */
 
     JP_addr(chip8_cpu,0x82);
