@@ -1,6 +1,6 @@
 #include "cpu.h"
 
-Processor *newProcessor(RAM* ram) {
+Processor *newProcessor(RAM *ram) {
     Processor *cpu = calloc(1, sizeof(Processor)); // calloc : everything to 0
     if (cpu == NULL) {
         fprintf(stderr, "Error : Processor allocation failed.\n");
@@ -11,17 +11,15 @@ Processor *newProcessor(RAM* ram) {
     return cpu;
 }
 
-int deleteProcessor(Processor *cpu) {
+void deleteProcessor(Processor *cpu) {
     if (cpu == NULL) {
         fprintf(stderr, "Error : Cant free a NULL Processor.\n");
-        return 1;
+        return;
     }
     free(cpu);
-
-    return 0;
 }
 
-void CLS(struct Display* display){ // 00E0
+void CLS(struct Display *display) { // 00E0
     assert(display);
     Display_CLS(display);
 }
@@ -160,30 +158,30 @@ void RND_Vx(Processor *cpu, uint8_t x, uint8_t kkk) { // Cxkk
     cpu->V[x] = (rand() % 256) & kkk;
 }
 
-void DRW_Vx_Vy(Processor *cpu,struct Display* display, uint8_t x, uint8_t y, uint8_t n) { // Dxyn
+void DRW_Vx_Vy(Processor *cpu, struct Display *display, uint8_t x, uint8_t y, uint8_t n) { // Dxyn
     assert(cpu);
     assert(display);
-    struct Sprite* sprite;
+    struct Sprite *sprite;
     Sprite_init(sprite, n);
-    for (int i = 0; i < n;i++){
-        Sprite_add(sprite,i);
+    for (int i = 0; i < n; i++) {
+        Sprite_add(sprite, i);
     }
-    Display_DRW(display,sprite,x,y,cpu->V[0xF]);
+    Display_DRW(display, sprite, x, y, &cpu->V[0xF]);
 }
 
-void SKP_Vx(Processor *cpu, struct Keyboard* keyboard,uint8_t x) { // Ex9E
+void SKP_Vx(Processor *cpu, struct Keyboard *keyboard, uint8_t x) { // Ex9E
     assert(cpu);
     assert(keyboard);
-    if (Keyboard_get(x) == 1){
-        cpu->PC+=2;
+    if (Keyboard_get(keyboard,x) == 1) {
+        cpu->PC += 2;
     }
 }
 
-void SNKP_Vx(Processor *cpu, struct Keyboard* keyboard,uint8_t x) { // ExA1
+void SNKP_Vx(Processor *cpu, struct Keyboard *keyboard, uint8_t x) { // ExA1
     assert(cpu);
     assert(keyboard);
-    if (Keyboard_get(keyboard,x) == 0){
-        cpu->PC+=2;
+    if (Keyboard_get(keyboard, x) == 0) {
+        cpu->PC += 2;
     }
 }
 
@@ -192,10 +190,10 @@ void LD_Vx_DT(Processor *cpu, uint8_t x) { // Fx07
     cpu->V[x] = cpu->DT;
 }
 
-void LD_Vx_K(Processor *cpu, struct Keyboard* keyboard,uint8_t x) { // Fx0A
+void LD_Vx_K(Processor *cpu, struct Keyboard *keyboard, uint8_t x) { // Fx0A
     assert(cpu);
     assert(keyboard);
-    Keyboard_wait(keyboard,cpu->V[x]);
+    Keyboard_wait(keyboard, &cpu->V[x]);
 }
 
 void LD_DT_Vx(Processor *cpu, uint8_t x) { // Fx15
@@ -247,7 +245,7 @@ void LD_Vx_I(Processor *cpu, uint8_t x) { // Fx65
     }
 }
 
-void fetch_decode_execute(Processor *cpu,struct Display* display,struct Keyboard* keyboard) {
+void fetch_decode_execute(Processor *cpu, struct Display *display, struct Keyboard *keyboard) {
     assert(cpu);
     assert(display);
     assert(keyboard);
@@ -275,9 +273,9 @@ void fetch_decode_execute(Processor *cpu,struct Display* display,struct Keyboard
         SNE_Vx(cpu, (instruction & 0x0F00) >> 8, instruction & 0x00FF);
     else if ((instruction & 0xF000) == 0x5000)  // 5xy0
         SE_Vx_Vy(cpu, (instruction & 0x0F00), (instruction & 0x00F0));
-    else if((instruction & 0xF000) == 0x6000) // 6xkk
+    else if ((instruction & 0xF000) == 0x6000) // 6xkk
         LD_Vx_Byte(cpu, (instruction & 0x0F00), (instruction & 0x00FF));
-    else if((instruction & 0xF000) == 0x7000) // 7xkk
+    else if ((instruction & 0xF000) == 0x7000) // 7xkk
         ADD_Vx_Byte(cpu, (instruction & 0x0F00), (instruction & 0x00FF));
     else if ((instruction & 0xF000) == 0x8000) // 8xy0
         LD_Vx_Vy(cpu, (instruction & 0x0F00), (instruction & 0x00F0));
@@ -285,64 +283,55 @@ void fetch_decode_execute(Processor *cpu,struct Display* display,struct Keyboard
         OR_Vx_Vy(cpu, (instruction & 0x0F00), (instruction & 0x00F0));
     else if ((instruction & 0xF00F) == 0x8002) // 8xy2
         AND_Vx_Vy(cpu, (instruction & 0x0F00), (instruction & 0x00F0));
-    else if((instruction & 0xF00F) == 0x8003) // 8xy3
+    else if ((instruction & 0xF00F) == 0x8003) // 8xy3
         XOR_Vx_Vy(cpu, (instruction & 0x0F00), (instruction & 0x00F0));
-    else if((instruction & 0xF00F) == 0x8004) // 8xy4
+    else if ((instruction & 0xF00F) == 0x8004) // 8xy4
         ADD_Vx_Vy(cpu, (instruction & 0x0F00), (instruction & 0x00F0));
-    else if((instruction & 0xF00F) == 0x8005) // 8xy5
+    else if ((instruction & 0xF00F) == 0x8005) // 8xy5
         SUB_Vx_Vy(cpu, (instruction & 0x0F00), (instruction & 0x00F0));
-    else if((instruction & 0xF00F) == 0x8006) // 8xy6
-        SHR_Vx(cpu,(instruction & 0x0F00));
-    else if((instruction & 0xF00F) == 0x8007) // 8xy7
+    else if ((instruction & 0xF00F) == 0x8006) // 8xy6
+        SHR_Vx(cpu, (instruction & 0x0F00));
+    else if ((instruction & 0xF00F) == 0x8007) // 8xy7
         SUBN_Vx_Vy(cpu, (instruction & 0x0F00), (instruction & 0x00F0));
-    else if((instruction & 0xF00F) == 0x800E) // 8xyE
-        SHL_Vx(cpu,(instruction & 0x0F00));
-    else if((instruction & 0xF000) == 0x9000) // 9xy0
+    else if ((instruction & 0xF00F) == 0x800E) // 8xyE
+        SHL_Vx(cpu, (instruction & 0x0F00));
+    else if ((instruction & 0xF000) == 0x9000) // 9xy0
         SNE_Vx_Vy(cpu, (instruction & 0x0F00), (instruction & 0x00F0));
-    else if((instruction & 0xF000) == 0xA000) // Annn
-        LD_I(cpu,(instruction & 0x0FFF));
-    else if((instruction & 0xF000) == 0xB000) // Bnnn
-        JP_V0(cpu,(instruction & 0x0FFF));
-    else if((instruction & 0xF000) == 0xC000) // Cxkk
+    else if ((instruction & 0xF000) == 0xA000) // Annn
+        LD_I(cpu, (instruction & 0x0FFF));
+    else if ((instruction & 0xF000) == 0xB000) // Bnnn
+        JP_V0(cpu, (instruction & 0x0FFF));
+    else if ((instruction & 0xF000) == 0xC000) // Cxkk
         RND_Vx(cpu, (instruction & 0x0F00), (instruction & 0x00FF));
-    else if((instruction & 0xF000) == 0xD000) // Dxyn
+    else if ((instruction & 0xF000) == 0xD000) // Dxyn
         DRW_Vx_Vy(cpu, display, (instruction & 0x0F00), (instruction & 0x00F0), (instruction & 0x000F));
-    else if((instruction & 0xF0FF) == 0xE09E) // Ex9E
-        SKP_Vx(cpu,keyboard,(instruction & 0x0F00));
-    else if((instruction & 0xF0FF) == 0xE0A1) // ExA1
-        SNKP_Vx(cpu,keyboard,(instruction & 0x0F00));
-    else if((instruction & 0xF00F) == 0xF007) // Fx07
-        LD_Vx_DT(cpu,(instruction & 0x0F00));
-    else if((instruction & 0xF0FF) == 0xF00A) // Fx0A
-        LD_Vx_K(cpu,keyboard,(instruction & 0x0F00));
-    else if((instruction & 0xF0FF) == 0xF015) // Fx15
-        LD_DT_Vx(cpu,(instruction & 0x0F00));
-    else if((instruction & 0xF0FF) == 0xF018) // Fx18
-        LD_ST_Vx(cpu,(instruction & 0x0F00));
-    else if((instruction & 0xF0FF) == 0xF01E) // Fx1E
-        ADD_I_Vx(cpu,(instruction & 0x0F00));
-    else if((instruction & 0xF0FF) == 0xF029) // Fx29
-        LD_F_Vx(cpu,(instruction & 0x0F00));
-    else if((instruction & 0xF0FF) == 0xF033) // Fx33
-        LD_B_Vx(cpu,(instruction & 0x0F00));
-    else if((instruction & 0xF0FF) == 0xF055) // Fx55
-        LD_I_Vx(cpu,(instruction & 0x0F00));
-    else if((instruction & 0xF0FF) == 0xF065) // Fx65
-        LD_Vx_I(cpu,(instruction & 0x0F00));
+    else if ((instruction & 0xF0FF) == 0xE09E) // Ex9E
+        SKP_Vx(cpu, keyboard, (instruction & 0x0F00));
+    else if ((instruction & 0xF0FF) == 0xE0A1) // ExA1
+        SNKP_Vx(cpu, keyboard, (instruction & 0x0F00));
+    else if ((instruction & 0xF00F) == 0xF007) // Fx07
+        LD_Vx_DT(cpu, (instruction & 0x0F00));
+    else if ((instruction & 0xF0FF) == 0xF00A) // Fx0A
+        LD_Vx_K(cpu, keyboard, (instruction & 0x0F00));
+    else if ((instruction & 0xF0FF) == 0xF015) // Fx15
+        LD_DT_Vx(cpu, (instruction & 0x0F00));
+    else if ((instruction & 0xF0FF) == 0xF018) // Fx18
+        LD_ST_Vx(cpu, (instruction & 0x0F00));
+    else if ((instruction & 0xF0FF) == 0xF01E) // Fx1E
+        ADD_I_Vx(cpu, (instruction & 0x0F00));
+    else if ((instruction & 0xF0FF) == 0xF029) // Fx29
+        LD_F_Vx(cpu, (instruction & 0x0F00));
+    else if ((instruction & 0xF0FF) == 0xF033) // Fx33
+        LD_B_Vx(cpu, (instruction & 0x0F00));
+    else if ((instruction & 0xF0FF) == 0xF055) // Fx55
+        LD_I_Vx(cpu, (instruction & 0x0F00));
+    else if ((instruction & 0xF0FF) == 0xF065) // Fx65
+        LD_Vx_I(cpu, (instruction & 0x0F00));
 }
 
-void Load_sprite(Processor* cpu){
-    //0
-    writeRAM(cpu->ram,0,0xF0);
-    writeRAM(cpu->ram,2,0x90);
-    writeRAM(cpu->ram,4,0x90);
-    writeRAM(cpu->ram,6,0x90);
-    writeRAM(cpu->ram,8,0xF0);
 
-    //1
-    writeRAM(cpu->ram,10,0x20);
-    writeRAM(cpu->ram,12,0x60);
-    writeRAM(cpu->ram,14,0x20);
-    writeRAM(cpu->ram,16,0x20);
-    writeRAM(cpu->ram,18,0x70);
+
+void decrement_timers(Processor* cpu){
+    cpu->ST -= 1;
+    cpu->DT -= 1;
 }

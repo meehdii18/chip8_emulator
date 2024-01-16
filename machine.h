@@ -3,7 +3,7 @@
 
 #include "cpu.h"
 #include "ram.h"
-//#include "libprovided/lib/release/x64/libprovided.a"
+
 
 /**
  * \file machine.h
@@ -18,28 +18,43 @@
 typedef struct Machine{
     struct Processor* cpu; /*!< Processor of the machine */
     struct RAM* ram;
-    // struct Display display; /*!< Display of the machine */
-    // struct Keyboard keyboard; /*!< Keyboard / Controller of the machine */
-    // struct Speaker speaker; /*!< Speaker of the machine */
+    struct Display *display; /*!< Display of the machine */
+    struct Keyboard *keyboard; /*!< Keyboard / Controller of the machine */
+    struct Speaker *speaker; /*!< Speaker of the machine */
 }Machine;
+
+/**
+ *
+ * @param cpu
+ */
+void Load_sprite(Processor *cpu);
 
 /**
  * Initialize the CHIP8 emulator
  * @return
  */
-Machine Machine_init();
+Machine* Machine_init();
+
+/**
+ * Destroy the CHIP8 emulator
+ */
+void Machine_destroy(Machine* machine);
 
 /**
  * Load a rom into the emulator
  * @param machine
  * @param rom
+ * @return 1 if success, 0 if not
  */
-void Machine_load(Machine machine,const char* rom);
+int Machine_load(Machine* machine,const char* rom);
 
 /**
  * Loop that represent one cycle of the machine
  * @param machine
  */
-void Machine_loop(Machine machine);
+void Machine_loop(Machine* machine);
+
+
+
 
 #endif //CHIP8_EMULATOR_MACHINE_H

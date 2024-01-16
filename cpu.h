@@ -4,6 +4,10 @@
 #include "ram.h"
 #include <assert.h>
 #include <SDL2/SDL.h>
+#include "display/display.h"
+#include "display/sprite.h"
+#include "speaker/speaker.h"
+#include "keyboard/keyboard.h"
 
 
 /**
@@ -36,10 +40,9 @@ Processor* newProcessor(RAM* ram);
 
 /**
  *
- * @param cpu A pointer to the processor to free
- * @return 0 if success and 1 if failure
+ * @param cpu A pointer to the processor to delete
  */
-int deleteProcessor(Processor* cpu);
+void deleteProcessor(Processor* cpu);
 
 /**
  * Clear the display
@@ -303,12 +306,18 @@ void LD_Vx_I(Processor* cpu, uint8_t x);
  * Fetches, decodes, and executes the next instruction in the RAM.
  * @param cpu
  */
-void fetch_decode_execute(Processor* cpu);
+void fetch_decode_execute(Processor *cpu, struct Display *display, struct Keyboard *keyboard);
 
 /**
  * Load default sprites into the ram.
  * @param cpu
  */
 void Load_sprite(Processor* cpu);
+
+/**
+ * Decrement sound and delay timers by 1.
+ * @param cpu
+ */
+void decrement_timers(Processor* cpu);
 
 #endif //CHIP8_CPU_H
