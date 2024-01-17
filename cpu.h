@@ -4,6 +4,7 @@
 #include "ram.h"
 #include <assert.h>
 #include <SDL2/SDL.h>
+#include <stdint.h>
 #include "display/display.h"
 #include "display/sprite.h"
 #include "speaker/speaker.h"

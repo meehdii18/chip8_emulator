@@ -46,10 +46,10 @@ void Machine_destroy(Machine* machine);
  * @param rom
  * @return 1 if success, 0 if not
  */
-int Machine_load(Machine* machine,const char* rom);
+int Machine_load(Machine* machine,const char* rompath);
 
 /**
- * Loop that represent one cycle of the machine
+ * Loop that represent one cycle of the machine cpu
  * @param machine
  */
 void Machine_loop(Machine* machine);

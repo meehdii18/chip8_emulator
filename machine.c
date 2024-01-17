@@ -152,32 +152,34 @@ void Machine_destroy(Machine* machine){
 }
 
 
-int Machine_load(Machine* machine,const char* rom){
-    //lecture du fichier
-    FILE* file = fopen(rom,"rb");
+int Machine_load(Machine* machine,const char* rompath){
+    printf("Loading ROM from : %s\n", rompath);
+    FILE* file = fopen(rompath,"rb");
     if(file==NULL){
         fprintf(stderr,"Erreur de lecture du fichier rom.");
-        fclose(file);
         return 0;
     }
 
-
-    //lire la rom et écrire dans la ram au fur et à mesure
     int address = 0x200;
-    char buffer;
-    while (fread(&buffer, sizeof(char), 1, file) == 1) {
+    uint8_t buffer;
+    while (fread(&buffer, sizeof(uint8_t), 1, file) == 1) {
+        if (address >= 4095) {
+            fprintf(stderr, "Erreur d'écriture de la rom à cause de la taille de la RAM");
+            fclose(file);
+            return 0;
+        }
         writeRAM(machine->ram, address++, buffer);
     }
 
     if (ferror(file)) {
         fprintf(stderr, "Erreur dans la lecture et l'écriture de la rom sur la ram.");
+        fclose(file);
         return 0;
     }
 
     fclose(file);
     return 1;
 }
-
 void Machine_loop(Machine* machine){
     Uint64 lastFetchDecodeExecuteTime = 0, lastDisplayTimersTime = 0;
     const Uint32 interval500 = 1000 / 500; // 500Hz
@@ -195,7 +197,6 @@ void Machine_loop(Machine* machine){
             decrement_timers(machine->cpu);
             lastDisplayTimersTime = currentTime;
         }
-
     }
 }
 
