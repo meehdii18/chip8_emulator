@@ -43,14 +43,14 @@ void CALL_addr(Processor *cpu, uint16_t adr) { // 2nnn
     cpu->PC = adr;
 }
 
-void SE_Vx(Processor *cpu, uint8_t value, uint8_t x) { // 3xkk
+void SE_Vx(Processor *cpu, uint8_t x, uint8_t value) { // 3xkk
     assert(cpu);
     if (cpu->V[x] == value) {
         cpu->PC += 2;
     }
 }
 
-void SNE_Vx(Processor *cpu, uint8_t value, uint8_t x) { // 4xkk
+void SNE_Vx(Processor *cpu, uint8_t x, uint8_t value) { // 4xkk
     assert(cpu);
     if (cpu->V[x] != value) {
         cpu->PC += 2;
@@ -81,17 +81,17 @@ void LD_Vx_Vy(Processor *cpu, uint8_t x, uint8_t y) { // 8xy0
 
 void OR_Vx_Vy(Processor *cpu, uint8_t x, uint8_t y) { // 8xy1
     assert(cpu);
-    cpu->V[x] = cpu->V[x] | cpu->V[y];
+    cpu->V[x] |= cpu->V[y];
 }
 
 void AND_Vx_Vy(Processor *cpu, uint8_t x, uint8_t y) { // 8xy2
     assert(cpu);
-    cpu->V[x] = cpu->V[x] & cpu->V[y];
+    cpu->V[x] &= cpu->V[y];
 }
 
 void XOR_Vx_Vy(Processor *cpu, uint8_t x, uint8_t y) { // 8xy3
     assert(cpu);
-    cpu->V[x] = cpu->V[x] ^ cpu->V[y];
+    cpu->V[x] ^= cpu->V[y];
 }
 
 void ADD_Vx_Vy(Processor *cpu, uint8_t x, uint8_t y) { // 8xy4
@@ -257,29 +257,26 @@ void fetch_decode_execute(Processor *cpu, struct Display *display, struct Keyboa
     cpu->PC += 2;
 
     //decode and execute
-    if (instruction == 0x0000) {
-        if ((instruction & 0x000F) == 0x0000) { // 00E0
-            CLS(display);
-        } else if ((instruction & 0x000F) == 0x000E) { // 00EE
-            RET(cpu);
-        }
 
-
+    if (instruction == 0x00E0) { // 00E0
+        CLS(display);
+    } else if (instruction == 0x00EE) { // 00EE
+        RET(cpu);
     } else if ((instruction & 0xF000) == 0x1000)  // 1nnn
         JP_addr(cpu, ((part1 & 0x0F)<<8) + part2);
     else if ((instruction & 0xF000) == 0x2000)  // 2nnn
         CALL_addr(cpu, ((part1 & 0x0F)<<8) + part2);
     else if ((instruction & 0xF000) == 0x3000)  // 3xkk
-        SE_Vx(cpu, (part1 & 0x0F) >> 4, part2);
+        SE_Vx(cpu, (part1 & 0x0F) , part2);
     else if ((instruction & 0xF000) == 0x4000)  // 4xkk
-        SNE_Vx(cpu, (part1 & 0x0F) >> 4, part2);
+        SNE_Vx(cpu, (part1 & 0x0F) , part2);
     else if ((instruction & 0xF000) == 0x5000)  // 5xy0
         SE_Vx_Vy(cpu, (part1&0x0F), (part2>>4));
     else if ((instruction & 0xF000) == 0x6000) // 6xkk
         LD_Vx_Byte(cpu, (part1&0x0F), (part2));
     else if ((instruction & 0xF000) == 0x7000) // 7xkk
         ADD_Vx_Byte(cpu, part1&0x0F, part2);
-    else if ((instruction & 0xF000) == 0x8000) // 8xy0
+    else if ((instruction & 0xF00F) == 0x8000) // 8xy0
         LD_Vx_Vy(cpu, part1&0x0F, part2>>4);
     else if ((instruction & 0xF00F) == 0x8001) // 8xy1
         OR_Vx_Vy(cpu, part1&0x0F, part2>>4);
@@ -329,6 +326,9 @@ void fetch_decode_execute(Processor *cpu, struct Display *display, struct Keyboa
         LD_I_Vx(cpu, part1&0x0F);
     else if ((instruction & 0xF0FF) == 0xF065) // Fx65
         LD_Vx_I(cpu, part1&0x0F);
+    else {
+        fprintf(stderr, "Error : Unknown instruction : %04x.\n",instruction);
+    }
 }
 
 
