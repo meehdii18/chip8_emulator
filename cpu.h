@@ -168,7 +168,7 @@ void SUB_Vx_Vy(Processor* cpu, uint8_t x, uint8_t y);
  * @param cpu
  * @param x
  */
-void SHR_Vx(Processor *cpu, uint8_t x);
+void SHR_Vx(Processor *cpu, uint8_t x, uint8_t y);
 
 /**
  * If Vy > Vx, then VF is set to 1, otherwise 0. Then Vx is subtracted from Vy, and the results stored in Vx.
@@ -183,7 +183,7 @@ void SUBN_Vx_Vy(Processor* cpu, uint8_t x, uint8_t y);
  * @param cpu
  * @param x
  */
-void SHL_Vx(Processor* cpu, uint8_t x);
+void SHL_Vx(Processor* cpu, uint8_t x, uint8_t y);
 
 /**
  * The values of Vx and Vy are compared, and if they are not equal, the program counter is increased by 2.

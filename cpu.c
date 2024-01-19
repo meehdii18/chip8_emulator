@@ -81,59 +81,74 @@ void LD_Vx_Vy(Processor *cpu, uint8_t x, uint8_t y) { // 8xy0
 
 void OR_Vx_Vy(Processor *cpu, uint8_t x, uint8_t y) { // 8xy1
     assert(cpu);
-    cpu->V[x] |= cpu->V[y];
+    uint8_t result = cpu->V[x] | cpu->V[y];
+    cpu->V[x] = result;
+    cpu->V[0xF] = (result != 0);
 }
 
 void AND_Vx_Vy(Processor *cpu, uint8_t x, uint8_t y) { // 8xy2
     assert(cpu);
-    cpu->V[x] &= cpu->V[y];
+    uint8_t result = cpu->V[x] & cpu->V[y];
+    cpu->V[x] = result;
+    cpu->V[0xF] = (result != 0);
 }
 
 void XOR_Vx_Vy(Processor *cpu, uint8_t x, uint8_t y) { // 8xy3
     assert(cpu);
-    cpu->V[x] ^= cpu->V[y];
+    uint8_t result = cpu->V[x] ^ cpu->V[y];
+    cpu->V[x] = result;
+    cpu->V[0xF] = (result != 0);
 }
-
 void ADD_Vx_Vy(Processor *cpu, uint8_t x, uint8_t y) { // 8xy4
     uint16_t temp = cpu->V[x] + cpu->V[y];
+    uint8_t flag;
     if (temp > 255) {
-        cpu->V[0xF] = 1;
+        flag = 1;
     } else {
-        cpu->V[0xF] = 0;
+        flag = 0;
     }
     cpu->V[x] = temp & 0xFF; // binary mask
+    cpu->V[0xF] = flag;
 }
 
 void SUB_Vx_Vy(Processor *cpu, uint8_t x, uint8_t y) { // 8xy5
     assert(cpu);
-    if (cpu->V[x] > cpu->V[y]) {
-        cpu->V[0xF] = 1;
+    uint8_t flag;
+    if (cpu->V[x] >= cpu->V[y]) {
+        flag = 1;
     } else {
-        cpu->V[0xF] = 0;
+        flag = 0;
     }
-    cpu->V[x] -= cpu->V[y];
+    cpu->V[x] = cpu->V[x] - cpu->V[y];
+    cpu->V[0xF] = flag;
 }
 
-void SHR_Vx(Processor *cpu, uint8_t x) { // 8xy6
+void SHR_Vx(Processor *cpu, uint8_t x, uint8_t y) { // 8xy6
     assert(cpu);
-    cpu->V[0xF] = cpu->V[x] & 0x01; // 0x01 = 00000001
-    cpu->V[x] = cpu->V[x] >> 1;
+    uint8_t flag = cpu->V[y] & 0x01; // 0x01 = 00000001
+    uint8_t result = cpu->V[y] >> 1;
+    cpu->V[x] = result;
+    cpu->V[0xF] = flag;
 }
 
 void SUBN_Vx_Vy(Processor *cpu, uint8_t x, uint8_t y) { // 8xy7
     assert(cpu);
-    if (cpu->V[y] > cpu->V[x]) {
-        cpu->V[0xF] = 1;
+    uint8_t flag;
+    if (cpu->V[y] >= cpu->V[x]) {
+        flag = 1;
     } else {
-        cpu->V[0xF] = 0;
+        flag = 0;
     }
-    cpu->V[x] -= cpu->V[y];
+    cpu->V[x] = cpu->V[y] - cpu->V[x];
+    cpu->V[0xF] = flag;
 }
 
-void SHL_Vx(Processor *cpu, uint8_t x) { // 8xyE
+void SHL_Vx(Processor *cpu, uint8_t x, uint8_t y) { // 8xyE
     assert(cpu);
-    cpu->V[0xF] = cpu->V[x] & 0x80; // 0x80 = 10000000
-    cpu->V[x] = cpu->V[x] >> 1;
+    uint8_t flag = (cpu->V[x] & 0x80) != 0; // 0x80 = 10000000
+    uint8_t result = cpu->V[x] << 1;
+    cpu->V[x] = result;
+    cpu->V[0xF] = flag;
 }
 
 void SNE_Vx_Vy(Processor *cpu, uint8_t x, uint8_t y) { // 9xy0
@@ -289,11 +304,11 @@ void fetch_decode_execute(Processor *cpu, struct Display *display, struct Keyboa
     else if ((instruction & 0xF00F) == 0x8005) // 8xy5
         SUB_Vx_Vy(cpu, part1&0x0F, part2>>4);
     else if ((instruction & 0xF00F) == 0x8006) // 8xy6
-        SHR_Vx(cpu, part1&0x0F);
+        SHR_Vx(cpu, part1&0x0F,part2>>4);
     else if ((instruction & 0xF00F) == 0x8007) // 8xy7
         SUBN_Vx_Vy(cpu, part1&0x0F, part2>>4);
     else if ((instruction & 0xF00F) == 0x800E) // 8xyE
-        SHL_Vx(cpu, part1&0x0F);
+        SHL_Vx(cpu, part1&0x0F, part2>>4);
     else if ((instruction & 0xF000) == 0x9000) // 9xy0
         SNE_Vx_Vy(cpu, part1&0x0F, part2>>4);
     else if ((instruction & 0xF000) == 0xA000) // Annn
@@ -331,9 +346,11 @@ void fetch_decode_execute(Processor *cpu, struct Display *display, struct Keyboa
     }
 }
 
-
-
 void decrement_timers(Processor* cpu){
-    cpu->ST -= 1;
-    cpu->DT -= 1;
+    if(cpu->ST > 0){
+        cpu->ST -= 1;
+    }
+    if(cpu->DT > 0){
+        cpu->DT -= 1;
+    }
 }

@@ -156,7 +156,7 @@ int Machine_load(Machine* machine,const char* rompath){
     printf("Loading ROM from : %s\n", rompath);
     FILE* file = fopen(rompath,"rb");
     if(file==NULL){
-        fprintf(stderr,"Erreur de lecture du fichier rom.");
+        fprintf(stderr,"Error readind rom file.\n");
         return 0;
     }
 
@@ -164,7 +164,7 @@ int Machine_load(Machine* machine,const char* rompath){
     uint8_t buffer;
     while (fread(&buffer, sizeof(uint8_t), 1, file) == 1) {
         if (address >= 4095) {
-            fprintf(stderr, "Erreur d'écriture de la rom à cause de la taille de la RAM");
+            fprintf(stderr, "Error during the memory writing because of the RAM size.\n");
             fclose(file);
             return 0;
         }
@@ -172,7 +172,7 @@ int Machine_load(Machine* machine,const char* rompath){
     }
 
     if (ferror(file)) {
-        fprintf(stderr, "Erreur dans la lecture et l'écriture de la rom sur la ram.");
+        fprintf(stderr, "Error during reading and writing the rom to the memory.\n");
         fclose(file);
         return 0;
     }
