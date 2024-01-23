@@ -83,21 +83,21 @@ void OR_Vx_Vy(Processor *cpu, uint8_t x, uint8_t y) { // 8xy1
     assert(cpu);
     uint8_t result = cpu->V[x] | cpu->V[y];
     cpu->V[x] = result;
-    cpu->V[0xF] = (result != 0);
+    cpu->V[0xF] = 0;
 }
 
 void AND_Vx_Vy(Processor *cpu, uint8_t x, uint8_t y) { // 8xy2
     assert(cpu);
     uint8_t result = cpu->V[x] & cpu->V[y];
     cpu->V[x] = result;
-    cpu->V[0xF] = (result != 0);
+    cpu->V[0xF] = 0;
 }
 
 void XOR_Vx_Vy(Processor *cpu, uint8_t x, uint8_t y) { // 8xy3
     assert(cpu);
     uint8_t result = cpu->V[x] ^ cpu->V[y];
     cpu->V[x] = result;
-    cpu->V[0xF] = (result != 0);
+    cpu->V[0xF] = 0;
 }
 void ADD_Vx_Vy(Processor *cpu, uint8_t x, uint8_t y) { // 8xy4
     uint16_t temp = cpu->V[x] + cpu->V[y];
@@ -146,7 +146,7 @@ void SUBN_Vx_Vy(Processor *cpu, uint8_t x, uint8_t y) { // 8xy7
 void SHL_Vx(Processor *cpu, uint8_t x, uint8_t y) { // 8xyE
     assert(cpu);
     uint8_t flag = (cpu->V[x] & 0x80) != 0; // 0x80 = 10000000
-    uint8_t result = cpu->V[x] << 1;
+    uint8_t result = cpu->V[y] << 1;
     cpu->V[x] = result;
     cpu->V[0xF] = flag;
 }
@@ -186,7 +186,7 @@ void DRW_Vx_Vy(Processor *cpu, struct Display *display, uint8_t x, uint8_t y, ui
 void SKP_Vx(Processor *cpu, struct Keyboard *keyboard, uint8_t x) { // Ex9E
     assert(cpu);
     assert(keyboard);
-    if (Keyboard_get(keyboard,x) == 1) {
+    if (Keyboard_get(keyboard,cpu->V[x])) {
         cpu->PC += 2;
     }
 }
@@ -194,7 +194,7 @@ void SKP_Vx(Processor *cpu, struct Keyboard *keyboard, uint8_t x) { // Ex9E
 void SNKP_Vx(Processor *cpu, struct Keyboard *keyboard, uint8_t x) { // ExA1
     assert(cpu);
     assert(keyboard);
-    if (Keyboard_get(keyboard, x) == 0) {
+    if (!Keyboard_get(keyboard, cpu->V[x])) {
         cpu->PC += 2;
     }
 }
@@ -207,7 +207,15 @@ void LD_Vx_DT(Processor *cpu, uint8_t x) { // Fx07
 void LD_Vx_K(Processor *cpu, struct Keyboard *keyboard, uint8_t x) { // Fx0A
     assert(cpu);
     assert(keyboard);
-    Keyboard_wait(keyboard, &cpu->V[x]);
+    cpu->PC -= 2;
+    for (int i = 0; i < 16; ++i) {
+        if (Keyboard_get(keyboard, i)) {
+            cpu->V[x] = i;
+            while (Keyboard_get(keyboard, i)) {}
+            cpu->PC += 2;
+            break;
+        }
+    }
 }
 
 void LD_DT_Vx(Processor *cpu, uint8_t x) { // Fx15
@@ -246,17 +254,19 @@ void LD_B_Vx(Processor *cpu, uint8_t x) { // Fx33
 void LD_I_Vx(Processor *cpu, uint8_t x) { // Fx55
     assert(cpu);
 
-    for (uint16_t i = 0; i <= x; i++) {
+    for (uint16_t i = 0; i < x+1; ++i) {
         writeRAM(cpu->ram, cpu->I + i, cpu->V[i]);
     }
+    cpu->I += x + 1;
 }
 
 void LD_Vx_I(Processor *cpu, uint8_t x) { // Fx65
     assert(cpu);
 
-    for (uint16_t i = 0; i <= x; i++) {
+    for (uint16_t i = 0; i < x+1; ++i) {
         cpu->V[i] = readRAM(cpu->ram, cpu->I + i);
     }
+    cpu->I += x + 1;
 }
 
 void fetch_decode_execute(Processor *cpu, struct Display *display, struct Keyboard *keyboard) {
