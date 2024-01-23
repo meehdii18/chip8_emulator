@@ -319,6 +319,6 @@ void Load_sprite(Processor* cpu);
  * Decrement sound and delay timers by 1.
  * @param cpu
  */
-void decrement_timers(Processor* cpu);
+void decrement_timers(Processor* cpu,struct Speaker* speaker);
 
 #endif //CHIP8_CPU_H

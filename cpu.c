@@ -235,7 +235,7 @@ void ADD_I_Vx(Processor *cpu, uint8_t x) { // Fx1E
 
 void LD_F_Vx(Processor *cpu, uint8_t x) { // Fx29
     assert(cpu);
-    //on doit coder en mémoire les sprites des nombres hexadécimaux et mettre I à l'adresse du sprite de la valeur de x
+    cpu->I = cpu->V[x] * 5;
 }
 
 void LD_B_Vx(Processor *cpu, uint8_t x) { // Fx33
@@ -356,9 +356,12 @@ void fetch_decode_execute(Processor *cpu, struct Display *display, struct Keyboa
     }
 }
 
-void decrement_timers(Processor* cpu){
+void decrement_timers(Processor* cpu,struct Speaker* speaker){
     if(cpu->ST > 0){
+        Speaker_on(speaker);
         cpu->ST -= 1;
+    }else if(cpu->ST ==0){
+        Speaker_off(speaker);
     }
     if(cpu->DT > 0){
         cpu->DT -= 1;
