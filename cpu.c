@@ -11,10 +11,10 @@ Processor *newProcessor(RAM *ram) {
     return cpu;
 }
 
-int deleteProcessor(Processor *cpu) {
+void deleteProcessor(Processor *cpu) {
     if (cpu == NULL) {
         fprintf(stderr, "Error : Cant free a NULL Processor.\n");
-        return 2;
+        return;
     }
     free(cpu);
 }
@@ -269,7 +269,7 @@ void LD_Vx_I(Processor *cpu, uint8_t x) { // Fx65
     cpu->I += x + 1;
 }
 
-int fetch_decode_execute(Processor *cpu, struct Display *display, struct Keyboard *keyboard) {
+void fetch_decode_execute(Processor *cpu, struct Display *display, struct Keyboard *keyboard) {
     assert(cpu);
     assert(display);
     assert(keyboard);
@@ -353,9 +353,7 @@ int fetch_decode_execute(Processor *cpu, struct Display *display, struct Keyboar
         LD_Vx_I(cpu, part1&0x0F);
     else {
         fprintf(stderr, "Error : Unknown instruction : %04x.\n",instruction);
-        return 7;
     }
-    return 0;
 }
 
 void decrement_timers(Processor* cpu,struct Speaker* speaker){

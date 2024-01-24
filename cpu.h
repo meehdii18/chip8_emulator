@@ -9,7 +9,6 @@
 #include "display/sprite.h"
 #include "speaker/speaker.h"
 #include "keyboard/keyboard.h"
-#include "misc/error.h"
 
 
 /**
@@ -44,7 +43,7 @@ Processor* newProcessor(RAM* ram);
  *
  * @param cpu A pointer to the processor to delete
  */
-int deleteProcessor(Processor* cpu);
+void deleteProcessor(Processor* cpu);
 
 /**
  * Clear the display
@@ -308,7 +307,7 @@ void LD_Vx_I(Processor* cpu, uint8_t x);
  * Fetches, decodes, and executes the next instruction in the RAM.
  * @param cpu
  */
-int fetch_decode_execute(Processor *cpu, struct Display *display, struct Keyboard *keyboard);
+void fetch_decode_execute(Processor *cpu, struct Display *display, struct Keyboard *keyboard);
 
 /**
  * Load default sprites into the ram.

@@ -171,7 +171,7 @@ int Machine_load(Machine* machine,const char* rompath){
     FILE* file = fopen(rompath,"rb");
     if(file==NULL){
         fprintf(stderr,"Error : reading rom file.\n");
-        return 1;
+        return 0;
     }
 
     int address = 0x200;
@@ -180,7 +180,7 @@ int Machine_load(Machine* machine,const char* rompath){
         if (address >= 4095) {
             fprintf(stderr, "Error : memory writing because of the RAM size.\n");
             fclose(file);
-            return 1;
+            return 0;
         }
         writeRAM(machine->ram, address++, buffer);
     }
@@ -188,28 +188,29 @@ int Machine_load(Machine* machine,const char* rompath){
     if (ferror(file)) {
         fprintf(stderr, "Error : reading and writing the rom to the memory.\n");
         fclose(file);
-        return 1;
+        return 0;
     }
 
     fclose(file);
-    return 0;
+    return 1;
 }
 
-int Machine_loop(Machine* machine){
+void Machine_loop(Machine* machine){
     Uint64 lastFetchDecodeExecuteTime = 0, lastDisplayTimersTime = 0;
     const Uint32 interval500 = 1000 / 600; // 600Hz
     const Uint32 intervall60 = 1000 / 60;  // 60Hz
     int stage = 0;
 
-    fetch_decode_execute(machine->cpu, machine->display, machine->keyboard);
-    SDL_Delay(stage ? 1 : 2);
-    stage = !stage;
+    while (1) {
+        fetch_decode_execute(machine->cpu, machine->display, machine->keyboard);
+        SDL_Delay(stage ? 1 : 2);
+        stage = !stage;
 
-    Uint64 currentTime = SDL_GetTicks64();
-    if (currentTime - lastDisplayTimersTime > intervall60) {
-        Display_update(machine->display);
-        decrement_timers(machine->cpu,machine->speaker);
-        lastDisplayTimersTime = currentTime;
+        Uint64 currentTime = SDL_GetTicks64();
+        if (currentTime - lastDisplayTimersTime > intervall60) {
+            Display_update(machine->display);
+            decrement_timers(machine->cpu,machine->speaker);
+            lastDisplayTimersTime = currentTime;
+        }
     }
-    return 0;
 }
