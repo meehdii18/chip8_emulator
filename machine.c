@@ -134,7 +134,7 @@ Machine* Machine_init(){
     Processor* cpu;
     cpu = newProcessor(ram);
     struct Display *display = malloc(sizeof(struct Display));
-    Display_init(display,10);
+    Display_init(display,20);
     struct Keyboard *keyboard = malloc(sizeof(struct Keyboard));
     Keyboard_init(keyboard);
     struct Speaker* speaker = malloc(sizeof(struct Speaker));
@@ -171,7 +171,7 @@ int Machine_load(Machine* machine,const char* rompath){
     FILE* file = fopen(rompath,"rb");
     if(file==NULL){
         fprintf(stderr,"Error : reading rom file.\n");
-        return 0;
+        return 1;
     }
 
     int address = 0x200;
@@ -180,7 +180,7 @@ int Machine_load(Machine* machine,const char* rompath){
         if (address >= 4095) {
             fprintf(stderr, "Error : memory writing because of the RAM size.\n");
             fclose(file);
-            return 0;
+            return 1;
         }
         writeRAM(machine->ram, address++, buffer);
     }
@@ -188,30 +188,28 @@ int Machine_load(Machine* machine,const char* rompath){
     if (ferror(file)) {
         fprintf(stderr, "Error : reading and writing the rom to the memory.\n");
         fclose(file);
-        return 0;
+        return 1;
     }
 
     fclose(file);
-    return 1;
+    return 0;
 }
 
-void Machine_loop(Machine* machine){
+int Machine_loop(Machine* machine){
     Uint64 lastFetchDecodeExecuteTime = 0, lastDisplayTimersTime = 0;
     const Uint32 interval500 = 1000 / 600; // 600Hz
     const Uint32 intervall60 = 1000 / 60;  // 60Hz
     int stage = 0;
 
-    while (1) {
-        fetch_decode_execute(machine->cpu, machine->display, machine->keyboard);
-        SDL_Delay(stage ? 1 : 2);
-        stage = !stage;
+    fetch_decode_execute(machine->cpu, machine->display, machine->keyboard);
+    SDL_Delay(stage ? 1 : 2);
+    stage = !stage;
 
-        Uint64 currentTime = SDL_GetTicks64();
-        if (currentTime - lastDisplayTimersTime > intervall60) {
-            Display_update(machine->display);
-            decrement_timers(machine->cpu,machine->speaker);
-            lastDisplayTimersTime = currentTime;
-        }
+    Uint64 currentTime = SDL_GetTicks64();
+    if (currentTime - lastDisplayTimersTime > intervall60) {
+        Display_update(machine->display);
+        decrement_timers(machine->cpu,machine->speaker);
+        lastDisplayTimersTime = currentTime;
     }
+    return 0;
 }
-

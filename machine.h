@@ -52,7 +52,7 @@ int Machine_load(Machine* machine,const char* rompath);
  * Loop that represent one cycle of the machine cpu
  * @param machine
  */
-void Machine_loop(Machine* machine);
+int Machine_loop(Machine* machine);
 
 
 
