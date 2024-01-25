@@ -279,7 +279,11 @@ void fetch_decode_execute(Processor *cpu, struct Display *display, struct Keyboa
     uint8_t part2 = readRAM(cpu->ram, cpu->PC + 1);
     uint16_t instruction = part1 << 8; // 8 bits left mask
     instruction += part2; // add part 2
-    cpu->PC += 2;
+    if(cpu->PC < 0x0FFF){
+        cpu->PC += 2;
+    }else{
+        SDL_Quit();
+    }
 
     //decode and execute
 

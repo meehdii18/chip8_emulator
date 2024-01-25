@@ -197,20 +197,20 @@ int Machine_load(Machine* machine,const char* rompath){
 
 void Machine_loop(Machine* machine){
     Uint64 lastFetchDecodeExecuteTime = 0, lastDisplayTimersTime = 0;
-    const Uint32 interval500 = 1000 / 600; // 600Hz
-    const Uint32 intervall60 = 1000 / 60;  // 60Hz
+    const Uint32 interval500 = 1000 / 500; // 500Hz
+    const Uint32 intervall60 = 1000 / 30;  // 60Hz
     int stage = 0;
 
-    while (1) {
-        fetch_decode_execute(machine->cpu, machine->display, machine->keyboard);
-        SDL_Delay(stage ? 1 : 2);
-        stage = !stage;
+    fetch_decode_execute(machine->cpu, machine->display, machine->keyboard);
+    SDL_Delay(stage ? 1 : 2);
+    stage = !stage;
 
-        Uint64 currentTime = SDL_GetTicks64();
-        if (currentTime - lastDisplayTimersTime > intervall60) {
-            Display_update(machine->display);
-            decrement_timers(machine->cpu,machine->speaker);
-            lastDisplayTimersTime = currentTime;
-        }
+    Uint64 currentTime = SDL_GetTicks64();
+    if (currentTime - lastDisplayTimersTime > intervall60) {
+        Display_update(machine->display);
+        decrement_timers(machine->cpu,machine->speaker);
+        lastDisplayTimersTime = currentTime;
     }
 }
+
+
