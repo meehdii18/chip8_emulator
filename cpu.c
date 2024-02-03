@@ -186,7 +186,8 @@ void DRW_Vx_Vy(Processor *cpu, struct Display *display, uint8_t x, uint8_t y, ui
 void SKP_Vx(Processor *cpu, struct Keyboard *keyboard, uint8_t x) { // Ex9E
     assert(cpu);
     assert(keyboard);
-    if (Keyboard_get(keyboard,cpu->V[x])) {
+    int state;
+    if (Keyboard_get(keyboard, cpu->V[x], &state) == 0 && state == KEY_DOWN) {
         cpu->PC += 2;
     }
 }
@@ -194,7 +195,8 @@ void SKP_Vx(Processor *cpu, struct Keyboard *keyboard, uint8_t x) { // Ex9E
 void SNKP_Vx(Processor *cpu, struct Keyboard *keyboard, uint8_t x) { // ExA1
     assert(cpu);
     assert(keyboard);
-    if (!Keyboard_get(keyboard, cpu->V[x])) {
+    int state;
+    if (Keyboard_get(keyboard, cpu->V[x], &state) == 0 && state == KEY_UP) {
         cpu->PC += 2;
     }
 }
@@ -207,14 +209,9 @@ void LD_Vx_DT(Processor *cpu, uint8_t x) { // Fx07
 void LD_Vx_K(Processor *cpu, struct Keyboard *keyboard, uint8_t x) { // Fx0A
     assert(cpu);
     assert(keyboard);
-    cpu->PC -= 2;
-    for (int i = 0; i < 16; ++i) {
-        if (Keyboard_get(keyboard, i)) {
-            cpu->V[x] = i;
-            while (Keyboard_get(keyboard, i)) {}
-            cpu->PC += 2;
-            break;
-        }
+    uint8_t key;
+    if (Keyboard_wait(keyboard, &key) == 0) {
+        cpu->V[x] = key;
     }
 }
 
