@@ -1,9 +1,4 @@
-#ifndef CHIP8_EMULATOR_MACHINE_H
-#define CHIP8_EMULATOR_MACHINE_H
-
 #include "cpu.h"
-#include "ram.h"
-
 
 /**
  * \file machine.h
@@ -15,46 +10,45 @@
  * \struct chip8
  * \brief Virtual machine representing the CHIP8
  */
-typedef struct Machine{
-    struct Processor* cpu; /*!< Processor of the machine */
-    struct RAM* ram;
-    struct Display *display; /*!< Display of the machine */
-    struct Keyboard *keyboard; /*!< Keyboard / Controller of the machine */
-    struct Speaker *speaker; /*!< Speaker of the machine */
-}Machine;
+typedef struct {
+    Cpu *processor;
+
+    Ram *memory;
+
+    struct Display *display;
+
+    struct Keyboard *keyboard;
+
+    struct Speaker *speaker;
+
+} Machine;
+
+Machine *Machine_new(void);
 
 /**
- *
- * @param cpu
+ * Initialize the CHIP8 emulator and all related components such as CPU, Display, Keyboard, Speaker and default sprites.
  */
-void Load_sprite(Processor *cpu);
+void Machine_init(Machine *machine);
 
 /**
- * Initialize the CHIP8 emulator
- * @return
+ * Free the machine and all related components from the computer memory.
  */
-Machine* Machine_init();
+void Machine_delete(Machine *machine);
 
 /**
- * Destroy the CHIP8 emulator
+ * Destroy the CPU of the machine.
  */
-void Machine_destroy(Machine* machine);
+void Machine_destroy(Machine *machine);
 
 /**
- * Load a rom into the emulator
+ * Load a rom into the emulator memory
+ * @param machine The emulator that will run the rom
+ * @param rom_file Path to the rom file
+ */
+void Machine_load(Machine *machine, char *rom_file);
+
+/**
+ * Start the emulator
  * @param machine
- * @param rom
- * @return 1 if success, 0 if not
  */
-int Machine_load(Machine* machine,const char* rompath);
-
-/**
- * Loop that represent one cycle of the machine cpu
- * @param machine
- */
-void Machine_loop(Machine* machine);
-
-
-
-
-#endif //CHIP8_EMULATOR_MACHINE_H
+void Machine_run(Machine *machine);

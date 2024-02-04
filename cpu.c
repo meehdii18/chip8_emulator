@@ -1,370 +1,389 @@
+#include <unistd.h>
 #include "cpu.h"
 
-Processor *newProcessor(RAM *ram) {
-    Processor *cpu = calloc(1, sizeof(Processor)); // calloc : everything to 0
-    if (cpu == NULL) {
-        fprintf(stderr, "Error : Processor allocation failed.\n");
-        return NULL;
-    }
-    cpu->PC = 0x200; //0x200 : 0x000 to 0x1FF reserved for interpreter
-    cpu->ram = ram;
-    return cpu;
+//------------------------------------------------------
+//-------------------Gestion structure------------------
+//------------------------------------------------------
+
+Cpu *Cpu_new(void) {
+    Cpu *newCpu = calloc(1, sizeof(Cpu));
+    Cpu_init(newCpu);
+
+    return newCpu;
 }
 
-void deleteProcessor(Processor *cpu) {
-    if (cpu == NULL) {
-        fprintf(stderr, "Error : Cant free a NULL Processor.\n");
-        return;
-    }
-    free(cpu);
+void Cpu_init(Cpu *processor) {
+    assert(processor);
+    processor->PC = 0x200;
 }
 
-void CLS(struct Display *display) { // 00E0
-    assert(display);
-    Display_CLS(display);
+void Cpu_delete(Cpu *processor) {
+    assert(processor);
+    Cpu_destroy(processor);
+    free(processor);
 }
 
-void RET(Processor *cpu) { // 00EE
-    assert(cpu);
-    cpu->PC = cpu->stack[cpu->SP];
-    cpu->SP--;
-
+void Cpu_destroy(Cpu *processor) {
+    assert(processor);
 }
 
-void JP_addr(Processor *cpu, uint16_t adr) { // 1nnn
-    assert(cpu);
-    cpu->PC = adr;
-}
+void fetch_decode_execute(Cpu *processor) {
 
-void CALL_addr(Processor *cpu, uint16_t adr) { // 2nnn
-    assert(cpu);
-    cpu->SP++;
-    cpu->stack[cpu->SP] = cpu->PC;
-    cpu->PC = adr;
-}
+    uint16_t instruction;
 
-void SE_Vx(Processor *cpu, uint8_t x, uint8_t value) { // 3xkk
-    assert(cpu);
-    if (cpu->V[x] == value) {
-        cpu->PC += 2;
-    }
-}
+    // FETCH
+    instruction = Ram_read(processor->memory, processor->PC);
+    instruction = instruction << 8;
+    instruction |= Ram_read(processor->memory, processor->PC + 1);
 
-void SNE_Vx(Processor *cpu, uint8_t x, uint8_t value) { // 4xkk
-    assert(cpu);
-    if (cpu->V[x] != value) {
-        cpu->PC += 2;
-    }
-}
-
-void SE_Vx_Vy(Processor *cpu, uint8_t x, uint8_t y) { // 5xy0
-    assert(cpu);
-    if (cpu->V[x] == cpu->V[y]) {
-        cpu->PC += 2;
-    }
-}
-
-void LD_Vx_Byte(Processor *cpu, uint8_t x, uint8_t value) { // 6xkk
-    assert(cpu);
-    cpu->V[x] = value;
-}
-
-void ADD_Vx_Byte(Processor *cpu, uint8_t x, uint8_t value) { // 7xkk
-    assert(cpu);
-    cpu->V[x] += value;
-}
-
-void LD_Vx_Vy(Processor *cpu, uint8_t x, uint8_t y) { // 8xy0
-    assert(cpu);
-    cpu->V[x] = cpu->V[y];
-}
-
-void OR_Vx_Vy(Processor *cpu, uint8_t x, uint8_t y) { // 8xy1
-    assert(cpu);
-    uint8_t result = cpu->V[x] | cpu->V[y];
-    cpu->V[x] = result;
-    cpu->V[0xF] = 0;
-}
-
-void AND_Vx_Vy(Processor *cpu, uint8_t x, uint8_t y) { // 8xy2
-    assert(cpu);
-    uint8_t result = cpu->V[x] & cpu->V[y];
-    cpu->V[x] = result;
-    cpu->V[0xF] = 0;
-}
-
-void XOR_Vx_Vy(Processor *cpu, uint8_t x, uint8_t y) { // 8xy3
-    assert(cpu);
-    uint8_t result = cpu->V[x] ^ cpu->V[y];
-    cpu->V[x] = result;
-    cpu->V[0xF] = 0;
-}
-void ADD_Vx_Vy(Processor *cpu, uint8_t x, uint8_t y) { // 8xy4
-    uint16_t temp = cpu->V[x] + cpu->V[y];
-    uint8_t flag;
-    if (temp > 255) {
-        flag = 1;
+    if (processor->PC < 0x0FFF) {
+        processor->PC += 2;
     } else {
-        flag = 0;
+        sleep(1000);
     }
-    cpu->V[x] = temp & 0xFF; // binary mask
-    cpu->V[0xF] = flag;
+
+    // DECODE & EXECUTE
+    switch (instruction & 0xF000) {
+        case 0x0000 :
+            if (instruction == 0x00E0) { //00E0
+                CLS(processor);
+            } else if (instruction == 0x00EE) { //00EE
+                RET(processor);
+            }
+            break;
+        case 0x1000 :
+            JP_addr(processor, instruction & 0x0FFF); //1nnn
+            break;
+        case 0x2000 :
+            CALL_addr(processor, instruction & 0x0FFF); //2nnn
+            break;
+        case 0x3000 :
+            SE_Vx_byte(processor, (instruction & 0x0F00)>>8, instruction & 0x00FF); //3xkk
+            break;
+        case 0x4000 :
+            SNE_Vx_byte(processor, (instruction & 0x0F00)>>8, instruction & 0x00FF); //4xkk
+            break;
+        case 0x5000 :
+            SE_Vx_Vy(processor, (instruction & 0x0F00)>>8, (instruction & 0x00F0)>>4); //5xy0
+            break;
+        case 0x6000 :
+            LD_Vx_byte(processor, (instruction & 0x0F00)>>8, instruction & 0x00FF); //6xkk
+            break;
+        case 0x7000 :
+            ADD_Vx_byte(processor, (instruction & 0x0F00)>>8, instruction & 0x00FF); //7xkk
+            break;
+        case 0x8000 :
+            switch (instruction & 0x000F) {
+                case 0x000 :
+                    LD_Vx_Vy(processor, (instruction & 0x0F00)>>8, (instruction & 0x00F0)>>4); //8xy0
+                    break;
+                case 0x0001 :
+                    OR_Vx_Vy(processor, (instruction & 0x0F00)>>8, (instruction & 0x00F0)>>4); //8xy1
+                    break;
+                case 0x0002 :
+                    AND_Vx_Vy(processor, (instruction & 0x0F00)>>8, (instruction & 0x00F0)>>4); //8xy2
+                    break;
+                case 0x0003 :
+                    XOR_Vx_Vy(processor, (instruction & 0x0F00)>>8, (instruction & 0x00F0)>>4); //8xy3
+                    break;
+                case 0x0004 :
+                    ADD_Vx_Vy(processor, (instruction & 0x0F00)>>8, (instruction & 0x00F0)>>4); //8xy4
+                    break;
+                case 0x0005 :
+                    SUB_Vx_Vy(processor, (instruction & 0x0F00)>>8, (instruction & 0x00F0)>>4); //8xy5
+                    break;
+                case 0x0006 :
+                    SHR_Vx(processor, (instruction & 0x0F00)>>8, (instruction & 0x00F0)>>4); //8xy6
+                    break;
+                case 0x0007 :
+                    SUBN_Vx_Vy(processor, (instruction & 0x0F00)>>8, (instruction & 0x00F0)>>4); //8xy7
+                    break;
+                case 0x000E :
+                    SHL_Vx(processor, (instruction & 0x0F00)>>8, (instruction & 0x00F0)>>4); //8xyE
+                    break;
+            }
+            break;
+        case 0x9000 :
+            SNE_Vx_Vy(processor, (instruction & 0x0F00)>>8, (instruction & 0x00F0)>>4); //9xy0
+            break;
+        case 0xA000 :
+            LD_I_addr(processor, instruction & 0x0FFF); //Annn
+            break;
+        case 0xB000 :
+            JP_V0_addr(processor, instruction & 0x0FFF); //Bnnn
+            break;
+        case 0xC000 :
+            RND_Vx_byte(processor, (instruction & 0x0F00)>>8, instruction & 0x00FF); //Cxkk
+            break;
+        case 0xD000 :
+            DRW_Vx_Vy_nibble(processor, (instruction & 0x0F00)>>8, (instruction & 0x00F0)>>4, instruction & 0x000F); //Dxyn
+            break;
+        case 0xE000 :
+            switch (instruction & 0x00FF) {
+                case 0x009E :
+                    SKP_Vx(processor, (instruction & 0x0F00)>>8); //Ex9E
+                    break;
+                case 0x00A1 :
+                    SKNP_Vx(processor, (instruction & 0x0F00)>>8); //ExA1
+                    break;
+            }
+            break;
+        case 0xF000 :
+            switch (instruction & 0x00FF) {
+                case 0x0007 :
+                    LD_Vx_DT(processor, (instruction & 0x0F00)>>8); //Fx07
+                    break;
+                case 0x000A :
+                    LD_Vx_K(processor, (instruction & 0x0F00)>>8); //Fx0A
+                    break;
+                case 0x0015 :
+                    LD_DT_Vx(processor, (instruction & 0x0F00)>>8); //Fx15
+                    break;
+                case 0x0018 :
+                    LD_ST_Vx(processor, (instruction & 0x0F00)>>8); //Fx18
+                    break;
+                case 0x001E :
+                    ADD_I_Vx(processor, (instruction & 0x0F00)>>8); //Fx1E
+                    break;
+                case 0x0029 :
+                    LD_F_Vx(processor, (instruction & 0x0F00)>>8); //Fx29
+                    break;
+                case 0x0033 :
+                    LD_B_Vx(processor, (instruction & 0x0F00)>>8); //Fx33
+                    break;
+                case 0x0055 :
+                    LD_I_Vx(processor, (instruction & 0x0F00)>>8); //Fx55
+                    break;
+                case 0x0065 :
+                    LD_Vx_I(processor, (instruction & 0x0F00)>>8); //Fx65
+                    break;
+            }
+            break;
+    }
+}
+//------------------------------------------------------
+//-----------------Instructions-------------------------
+//------------------------------------------------------
+
+void CLS(Cpu *processor) {
+    assert(processor);
+    Display_CLS(processor->display);
 }
 
-void SUB_Vx_Vy(Processor *cpu, uint8_t x, uint8_t y) { // 8xy5
-    assert(cpu);
+void RET(Cpu *processor) {
+    assert(processor);
+    processor->PC = processor->stack[processor->SP];
+    processor->SP--;
+}
+
+void JP_addr(Cpu *processor, uint16_t addr) {
+    assert(processor);
+    processor->PC = addr;
+}
+
+void CALL_addr(Cpu *processor, uint16_t addr) {
+    assert(processor);
+    processor->SP++;
+    processor->stack[processor->SP] = processor->PC;
+    processor->PC = addr;
+}
+
+void SE_Vx_byte(Cpu *processor, uint8_t x, uint8_t byte) {
+    assert(processor);
+    if (processor->V[x] == byte)
+        processor->PC += 2;
+}
+
+void SNE_Vx_byte(Cpu *processor, uint8_t x, uint8_t byte) {
+    assert(processor);
+    if (processor->V[x] != byte)
+        processor->PC += 2;
+}
+
+void SE_Vx_Vy(Cpu *processor, uint8_t x, uint8_t y) {
+    assert(processor);
+    if (processor->V[x] == processor->V[y])
+        processor->PC += 2;
+}
+
+void LD_Vx_byte(Cpu *processor, uint8_t x, uint8_t byte) {
+    assert(processor);
+    processor->V[x] = byte;
+}
+
+void ADD_Vx_byte(Cpu *processor, uint8_t x, uint8_t byte) {
+    assert(processor);
+    processor->V[x] += byte;
+}
+
+void LD_Vx_Vy(Cpu *processor, uint8_t x, uint8_t y) {
+    assert(processor);
+    processor->V[x] = processor->V[y];
+}
+
+void OR_Vx_Vy(Cpu *processor, uint8_t x, uint8_t y) {
+    assert(processor);
+    processor->V[x] = processor->V[x] | processor->V[y];
+    processor->V[0xF] = 0;
+}
+
+void AND_Vx_Vy(Cpu *processor, uint8_t x, uint8_t y) {
+    assert(processor);
+    processor->V[x] = processor->V[x] & processor->V[y];
+    processor->V[0xF] = 0;
+}
+
+void XOR_Vx_Vy(Cpu *processor, uint8_t x, uint8_t y) {
+    assert(processor);
+    processor->V[x] = processor->V[x] ^ processor->V[y];
+    processor->V[0xF] = 0;
+}
+
+void ADD_Vx_Vy(Cpu *processor, uint8_t x, uint8_t y) {
+    assert(processor);
+    uint16_t temp = processor->V[x] + processor->V[y];
+    processor->V[x] = temp & 0xFF;
+    if (temp > 255)
+        processor->V[0xF] = 1;
+    else
+        processor->V[0xF] = 0;
+}
+
+void SUB_Vx_Vy(Cpu *processor, uint8_t x, uint8_t y) {
+    assert(processor);
     uint8_t flag;
-    if (cpu->V[x] >= cpu->V[y]) {
+    if (processor->V[x] >= processor->V[y])
         flag = 1;
-    } else {
+    else
         flag = 0;
-    }
-    cpu->V[x] = cpu->V[x] - cpu->V[y];
-    cpu->V[0xF] = flag;
+    processor->V[x] -= processor->V[y];
+    processor->V[0xF] = flag;
 }
 
-void SHR_Vx(Processor *cpu, uint8_t x, uint8_t y) { // 8xy6
-    assert(cpu);
-    uint8_t flag = cpu->V[y] & 0x01; // 0x01 = 00000001
-    uint8_t result = cpu->V[y] >> 1;
-    cpu->V[x] = result;
-    cpu->V[0xF] = flag;
+void SHR_Vx(Cpu *processor, uint8_t x, uint8_t y) {
+    assert(processor);
+    uint8_t flag = processor->V[y] & 0x1;
+    processor->V[x] = processor->V[y] >> 1;
+    processor->V[0xF] = flag;
 }
 
-void SUBN_Vx_Vy(Processor *cpu, uint8_t x, uint8_t y) { // 8xy7
-    assert(cpu);
+void SUBN_Vx_Vy(Cpu *processor, uint8_t x, uint8_t y) {
+    assert(processor);
     uint8_t flag;
-    if (cpu->V[y] >= cpu->V[x]) {
+    if (processor->V[x] <= processor->V[y])
         flag = 1;
-    } else {
+    else
         flag = 0;
-    }
-    cpu->V[x] = cpu->V[y] - cpu->V[x];
-    cpu->V[0xF] = flag;
+    processor->V[x] = processor->V[y] - processor->V[x];
+    processor->V[0xF] = flag;
 }
 
-void SHL_Vx(Processor *cpu, uint8_t x, uint8_t y) { // 8xyE
-    assert(cpu);
-    uint8_t flag = (cpu->V[x] & 0x80) != 0; // 0x80 = 10000000
-    uint8_t result = cpu->V[y] << 1;
-    cpu->V[x] = result;
-    cpu->V[0xF] = flag;
+void SHL_Vx(Cpu *processor, uint8_t x, uint8_t y) {
+    assert(processor);
+    uint8_t flag = (processor->V[y] & 0x80) != 0;
+    processor->V[x] = processor->V[y] << 1;
+    processor->V[0xF] = flag;
 }
 
-void SNE_Vx_Vy(Processor *cpu, uint8_t x, uint8_t y) { // 9xy0
-    assert(cpu);
-    if (cpu->V[x] != cpu->V[y]) {
-        cpu->PC += 2;
-    }
+void SNE_Vx_Vy(Cpu *processor, uint8_t x, uint8_t y) {
+    assert(processor);
+    if (processor->V[x] != processor->V[y])
+        processor->PC += 2;
 }
 
-void LD_I(Processor *cpu, uint16_t value) { // Annn
-    assert(cpu);
-    cpu->I = value;
+void LD_I_addr(Cpu *processor, uint16_t addr) {
+    assert(processor);
+    processor->I = addr;
 }
 
-void JP_V0(Processor *cpu, uint16_t value) { // Bnnn
-    assert(cpu);
-    cpu->PC = cpu->V[0] + value;
+void JP_V0_addr(Cpu *processor, uint16_t addr) {
+    assert(processor);
+    processor->PC = processor->V[0] + addr;
 }
 
-void RND_Vx(Processor *cpu, uint8_t x, uint8_t kkk) { // Cxkk
-    assert(cpu);
-    cpu->V[x] = (rand() % 256) & kkk;
+void RND_Vx_byte(Cpu *processor, uint8_t x, uint8_t byte) { //    !!! APPELER SRAND() POUR INITIALISER RAND() !!!
+    assert(processor);
+    processor->V[x] = (rand() % 256) & byte;
 }
 
-void DRW_Vx_Vy(Processor *cpu, struct Display *display, uint8_t x, uint8_t y, uint8_t n) { // Dxyn
+void DRW_Vx_Vy_nibble(Cpu *processor, uint8_t x, uint8_t y, uint8_t nibble) {
+    assert(processor);
     struct Sprite sprite;
-    Sprite_init(&sprite,n);
-    for(int i=0;i<n;i++){
-        Sprite_add(&sprite,readRAM(cpu->ram, cpu->I+i));
+    uint8_t line;
+    Sprite_init(&sprite, nibble);
+    for (uint8_t count = 0; count < nibble; count++) {
+        line = Ram_read(processor->memory, processor->I + count);
+        Sprite_add(&sprite, line);
     }
-    Display_DRW(display,&sprite,cpu->V[x],cpu->V[y],&cpu->V[0xF]);
+    Display_DRW(processor->display, &sprite, processor->V[x], processor->V[y], &processor->V[0xF]);
     Sprite_destroy(&sprite);
 }
 
-void SKP_Vx(Processor *cpu, struct Keyboard *keyboard, uint8_t x) { // Ex9E
-    assert(cpu);
-    assert(keyboard);
-    int state;
-    if (Keyboard_get(keyboard, cpu->V[x], &state) == 0 && state == KEY_DOWN) {
-        cpu->PC += 2;
+void SKP_Vx(Cpu *processor, uint8_t x) {
+    assert(processor);
+    if (Keyboard_get(processor->keyboard, processor->V[x])) {
+        processor->PC += 2;
     }
 }
 
-void SNKP_Vx(Processor *cpu, struct Keyboard *keyboard, uint8_t x) { // ExA1
-    assert(cpu);
-    assert(keyboard);
-    int state;
-    if (Keyboard_get(keyboard, cpu->V[x], &state) == 0 && state == KEY_UP) {
-        cpu->PC += 2;
+void SKNP_Vx(Cpu *processor, uint8_t x) {
+    assert(processor);
+    if (!Keyboard_get(processor->keyboard, processor->V[x])) {
+        processor->PC += 2;
     }
 }
 
-void LD_Vx_DT(Processor *cpu, uint8_t x) { // Fx07
-    assert(cpu);
-    cpu->V[x] = cpu->DT;
+void LD_Vx_DT(Cpu *processor, uint8_t x) {
+    assert(processor);
+    processor->V[x] = processor->DT;
 }
 
-void LD_Vx_K(Processor *cpu, struct Keyboard *keyboard, uint8_t x) { // Fx0A
-    assert(cpu);
-    assert(keyboard);
-    uint8_t key;
-    if (Keyboard_wait(keyboard, &key) == 0) {
-        cpu->V[x] = key;
+void LD_Vx_K(Cpu *processor, uint8_t x) {
+    assert(processor);
+    Keyboard_wait(processor->keyboard, &processor->V[x]);
+}
+
+void LD_DT_Vx(Cpu *processor, uint8_t x) {
+    assert(processor);
+    processor->DT = processor->V[x];
+}
+
+void LD_ST_Vx(Cpu *processor, uint8_t x) {
+    assert(processor);
+    processor->ST = processor->V[x];
+}
+
+void ADD_I_Vx(Cpu *processor, uint8_t x) {
+    assert(processor);
+    processor->I += processor->V[x];
+}
+
+void LD_F_Vx(Cpu *processor, uint8_t x) {
+    assert(processor);
+    processor->I = 5 * x;
+}
+
+void LD_B_Vx(Cpu *processor, uint8_t x) {
+    assert(processor);
+    uint8_t value = processor->V[x];
+
+    Ram_write(processor->memory, processor->I, value / 100);
+    Ram_write(processor->memory, processor->I + 1, value % 100 / 10);
+    Ram_write(processor->memory, processor->I + 2, value % 10);
+}
+
+void LD_I_Vx(Cpu *processor, uint8_t x) {
+    uint8_t counter;
+    for (counter = 0; counter <= x; counter++) {
+        Ram_write(processor->memory, processor->I + counter, processor->V[counter]);
     }
+    processor->I++;
 }
 
-void LD_DT_Vx(Processor *cpu, uint8_t x) { // Fx15
-    assert(cpu);
-    cpu->DT = cpu->V[x];
-}
-
-void LD_ST_Vx(Processor *cpu, uint8_t x) { // Fx18
-    assert(cpu);
-    cpu->ST = cpu->V[x];
-}
-
-void ADD_I_Vx(Processor *cpu, uint8_t x) { // Fx1E
-    assert(cpu);
-    cpu->I += cpu->V[x];
-}
-
-void LD_F_Vx(Processor *cpu, uint8_t x) { // Fx29
-    assert(cpu);
-    cpu->I = cpu->V[x] * 5;
-}
-
-void LD_B_Vx(Processor *cpu, uint8_t x) { // Fx33
-    assert(cpu);
-    uint8_t value = cpu->V[x];
-
-    uint8_t hundreds = value / 100;
-    uint8_t tens = (value % 100) / 10;
-    uint8_t ones = value % 10;
-
-    writeRAM(cpu->ram, cpu->I, hundreds);
-    writeRAM(cpu->ram, cpu->I + 1, tens);
-    writeRAM(cpu->ram, cpu->I + 2, ones);
-}
-
-void LD_I_Vx(Processor *cpu, uint8_t x) { // Fx55
-    assert(cpu);
-
-    for (uint16_t i = 0; i < x+1; ++i) {
-        writeRAM(cpu->ram, cpu->I + i, cpu->V[i]);
+void LD_Vx_I(Cpu *processor, uint8_t x) {
+    uint8_t counter;
+    for (counter = 0; counter <= x; counter++) {
+        processor->V[counter] = Ram_read(processor->memory, processor->I + counter);
     }
-    cpu->I += x + 1;
-}
-
-void LD_Vx_I(Processor *cpu, uint8_t x) { // Fx65
-    assert(cpu);
-
-    for (uint16_t i = 0; i < x+1; ++i) {
-        cpu->V[i] = readRAM(cpu->ram, cpu->I + i);
-    }
-    cpu->I += x + 1;
-}
-
-void fetch_decode_execute(Processor *cpu, struct Display *display, struct Keyboard *keyboard) {
-    assert(cpu);
-    assert(display);
-    assert(keyboard);
-
-    //fetch
-    uint8_t part1 = readRAM(cpu->ram, cpu->PC);
-    uint8_t part2 = readRAM(cpu->ram, cpu->PC + 1);
-    uint16_t instruction = part1 << 8; // 8 bits left mask
-    instruction += part2; // add part 2
-    if(cpu->PC < 0x0FFF){
-        cpu->PC += 2;
-    }else{
-        SDL_Quit();
-    }
-
-    //decode and execute
-
-    if (instruction == 0x00E0) { // 00E0
-        CLS(display);
-    } else if (instruction == 0x00EE) { // 00EE
-        RET(cpu);
-    } else if ((instruction & 0xF000) == 0x1000)  // 1nnn
-        JP_addr(cpu, ((part1 & 0x0F)<<8) + part2);
-    else if ((instruction & 0xF000) == 0x2000)  // 2nnn
-        CALL_addr(cpu, ((part1 & 0x0F)<<8) + part2);
-    else if ((instruction & 0xF000) == 0x3000)  // 3xkk
-        SE_Vx(cpu, (part1 & 0x0F) , part2);
-    else if ((instruction & 0xF000) == 0x4000)  // 4xkk
-        SNE_Vx(cpu, (part1 & 0x0F) , part2);
-    else if ((instruction & 0xF000) == 0x5000)  // 5xy0
-        SE_Vx_Vy(cpu, (part1&0x0F), (part2>>4));
-    else if ((instruction & 0xF000) == 0x6000) // 6xkk
-        LD_Vx_Byte(cpu, (part1&0x0F), (part2));
-    else if ((instruction & 0xF000) == 0x7000) // 7xkk
-        ADD_Vx_Byte(cpu, part1&0x0F, part2);
-    else if ((instruction & 0xF00F) == 0x8000) // 8xy0
-        LD_Vx_Vy(cpu, part1&0x0F, part2>>4);
-    else if ((instruction & 0xF00F) == 0x8001) // 8xy1
-        OR_Vx_Vy(cpu, part1&0x0F, part2>>4);
-    else if ((instruction & 0xF00F) == 0x8002) // 8xy2
-        AND_Vx_Vy(cpu, part1&0x0F, part2>>4);
-    else if ((instruction & 0xF00F) == 0x8003) // 8xy3
-        XOR_Vx_Vy(cpu, part1&0x0F, part2>>4);
-    else if ((instruction & 0xF00F) == 0x8004) // 8xy4
-        ADD_Vx_Vy(cpu, part1&0x0F, part2>>4);
-    else if ((instruction & 0xF00F) == 0x8005) // 8xy5
-        SUB_Vx_Vy(cpu, part1&0x0F, part2>>4);
-    else if ((instruction & 0xF00F) == 0x8006) // 8xy6
-        SHR_Vx(cpu, part1&0x0F,part2>>4);
-    else if ((instruction & 0xF00F) == 0x8007) // 8xy7
-        SUBN_Vx_Vy(cpu, part1&0x0F, part2>>4);
-    else if ((instruction & 0xF00F) == 0x800E) // 8xyE
-        SHL_Vx(cpu, part1&0x0F, part2>>4);
-    else if ((instruction & 0xF000) == 0x9000) // 9xy0
-        SNE_Vx_Vy(cpu, part1&0x0F, part2>>4);
-    else if ((instruction & 0xF000) == 0xA000) // Annn
-        LD_I(cpu, ((part1 & 0x0F)<<8) + part2);
-    else if ((instruction & 0xF000) == 0xB000) // Bnnn
-        JP_V0(cpu, (instruction & 0x0FFF));
-    else if ((instruction & 0xF000) == 0xC000) // Cxkk
-        RND_Vx(cpu, part1&0x0F, part2);
-    else if ((instruction & 0xF000) == 0xD000) // Dxyn
-        DRW_Vx_Vy(cpu, display, (part1&0x0F) , (part2)>>4, (part2&0x0F));
-    else if ((instruction & 0xF0FF) == 0xE09E) // Ex9E
-        SKP_Vx(cpu, keyboard, part1&0x0F);
-    else if ((instruction & 0xF0FF) == 0xE0A1) // ExA1
-        SNKP_Vx(cpu, keyboard, part1&0x0F);
-    else if ((instruction & 0xF00F) == 0xF007) // Fx07
-        LD_Vx_DT(cpu, part1&0x0F);
-    else if ((instruction & 0xF0FF) == 0xF00A) // Fx0A
-        LD_Vx_K(cpu, keyboard, part1&0x0F);
-    else if ((instruction & 0xF0FF) == 0xF015) // Fx15
-        LD_DT_Vx(cpu, part1&0x0F);
-    else if ((instruction & 0xF0FF) == 0xF018) // Fx18
-        LD_ST_Vx(cpu, part1&0x0F);
-    else if ((instruction & 0xF0FF) == 0xF01E) // Fx1E
-        ADD_I_Vx(cpu, part1&0x0F);
-    else if ((instruction & 0xF0FF) == 0xF029) // Fx29
-        LD_F_Vx(cpu, part1&0x0F);
-    else if ((instruction & 0xF0FF) == 0xF033) // Fx33
-        LD_B_Vx(cpu, part1&0x0F);
-    else if ((instruction & 0xF0FF) == 0xF055) // Fx55
-        LD_I_Vx(cpu, part1&0x0F);
-    else if ((instruction & 0xF0FF) == 0xF065) // Fx65
-        LD_Vx_I(cpu, part1&0x0F);
-    else {
-        fprintf(stderr, "Error : Unknown instruction : %04x.\n",instruction);
-    }
-}
-
-void decrement_timers(Processor* cpu,struct Speaker* speaker){
-    if(cpu->ST > 0){
-        Speaker_on(speaker);
-        cpu->ST -= 1;
-    }else if(cpu->ST ==0){
-        Speaker_off(speaker);
-    }
-    if(cpu->DT > 0){
-        cpu->DT -= 1;
-    }
+    processor->I++;
 }

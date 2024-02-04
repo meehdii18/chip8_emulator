@@ -1,8 +1,10 @@
-#ifndef CHIP8_RAM_H
-#define CHIP8_RAM_H
+#ifndef RAM_HEADER_GUARD
+#define RAM_HEADER_GUARD
+
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <assert.h>
 
 /**
  * \file ram.h
@@ -13,39 +15,47 @@
  * \struct RAM
  * \brief Memory structure of the emulated CHIP 8
  */
-typedef struct RAM {
-    uint8_t* cell; /*!< Pointer to an array of 8 bits representing the memory cells */
-} RAM;
+typedef struct {
+    uint8_t *tab;/*!< Pointer to an array of 8 bits representing the memory cells */
+} Ram;
 
 /**
  * Initialize the ram memory structure
  * @return A pointer to the ram structure if success, NULL if it failed
  */
-RAM* newRAM();
+Ram *Ram_new(void);
+
+/**
+ * Allocate the memory for the RAM Cells.
+ */
+void Ram_init(Ram *memory);
 
 /**
  * Frees the memory allocated for the RAM structure.
- * @param ram A pointer to the ram structure to free
- * @return 0 if the ram was successfully freed
+ * @param memory A pointer to the ram structure to free
  */
-int deleteRAM(RAM* ram);
+void Ram_delete(Ram *memory);
 
 /**
- * Function to read the value at a given address in a ram cell
- * @param a pointer to the RAM struct to read
- * @param adr The address in the RAM from where the value will be read
- * @return he value at the specified address in the RAM if the adr is valid, 1 if the address is out of range
+ * Frees the memory allocated for the RAM Cells.
+ * @param memory A pointer to the ram structure to destroy
  */
-uint8_t readRAM(RAM* ram,uint16_t adr);
+void Ram_destroy(Ram *memory);
 
 /**
  * Function to write to a given address in a cell
- * @param ram The ram to write in
- * @param adr The cell address to write in
+ * @param memory The ram to write in
+ * @param address The cell address to write in
  * @param value The value to store in the address
- * @return 0 if the value was successfully written into the cell, 1 if it is out of range
  */
-void writeRAM(RAM* ram, uint16_t adr,uint8_t value);
+void Ram_write(Ram *memory, uint16_t address, uint8_t value);
 
+/**
+ * Function to read the value at a given address in a ram cell
+ * @param memory A pointer to the RAM struct to read in
+ * @param address The address in the RAM from where the value will be read
+ * @return The value at the specified address in the RAM if the adr is valid, 1 if the address is out of range
+ */
+uint8_t Ram_read(Ram *memory, uint16_t address);
 
-#endif //CHIP8_RAM_H
+#endif

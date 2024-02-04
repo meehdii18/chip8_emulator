@@ -1,48 +1,46 @@
 #include "ram.h"
 
-RAM* newRAM(){
-    RAM* ram = malloc(sizeof(RAM));
-    if (ram == NULL){
-        fprintf(stderr, "Error : RAM structure allocation failed.\n");
-        return NULL;
-    }
 
-    ram->cell = malloc(sizeof(uint8_t) * 4096);
-    if (ram->cell == NULL){
-        fprintf(stderr, "Error: RAM array allocation failed.\n");
-        free(ram);
-        return NULL;
-    }
-    return ram;
+Ram *Ram_new(void) {
+    Ram *newRam = malloc(sizeof(Ram));
+    Ram_init(newRam);
+
+    return newRam;
 }
 
-int deleteRAM(RAM* ram){
-    free(ram->cell);
-    free(ram);
-    return 0;
+void Ram_init(Ram *memory) {
+    assert(memory);
+    memory->tab = calloc(0x1000, sizeof(int8_t));
 }
 
-uint8_t readRAM(RAM* ram,uint16_t adr){
-    if(ram == NULL){
-        fprintf(stderr,"Error : Can't read in a NULL ram.\n");
-        exit(EXIT_FAILURE);
-    }
-    if (adr >= 4096){
-        fprintf(stderr, "Error : Address out of range.\n");
-        exit(EXIT_FAILURE);
-    }
-    return ram->cell[adr];
+void Ram_delete(Ram *memory) {
+    assert(memory);
+    Ram_destroy(memory);
+    free(memory);
 }
 
-void writeRAM(RAM* ram, uint16_t adr,uint8_t value){
-    if(ram == NULL){
-        fprintf(stderr,"Error : Can't write to a NULL ram.\n");
+void Ram_destroy(Ram *memory) {
+    assert(memory);
+    free(memory->tab);
+}
+
+void Ram_write(Ram *memory, uint16_t address, uint8_t value) {
+    assert(memory);
+    if (address < 0x1000) {
+        memory->tab[address] = value;
+    } else {
+        fprintf(stderr, "Error : Can't write in memory.\n");
         exit(EXIT_FAILURE);
     }
-    if (adr >= 4096){
-        fprintf(stderr,"Error : Address out of range.\n");
+}
+
+uint8_t Ram_read(Ram *memory, uint16_t address) {
+    assert(memory);
+    if (address <= 0x1000)
+        return memory->tab[address];
+    else {
+        printf("%x",address);
+        fprintf(stderr, "Error : Can't read in memory.");
         exit(EXIT_FAILURE);
-    }else{
-        ram->cell[adr] = value;
     }
 }
